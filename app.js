@@ -220,8 +220,16 @@ function openPractice(id) {
   practiceDialog.showModal();
 }
 
-function closeChat() { chatDrawer.hidden = true; document.querySelector('[data-open-chat]').focus(); }
-function openChat() { chatDrawer.hidden = false; chatInput.focus(); }
+function closeChat({ restoreFocus = true } = {}) {
+  chatDrawer.hidden = true;
+  document.querySelector('[data-open-chat]').setAttribute('aria-expanded', 'false');
+  if (restoreFocus) document.querySelector('[data-open-chat]').focus();
+}
+function openChat() {
+  chatDrawer.hidden = false;
+  document.querySelector('[data-open-chat]').setAttribute('aria-expanded', 'true');
+  chatInput.focus();
+}
 function setTeamSupportEnabled(enabled) {
   teamSupportForm.querySelectorAll('input, textarea').forEach((field) => { field.disabled = !enabled; });
   teamSupportSubmit.disabled = !enabled;
@@ -284,8 +292,9 @@ document.querySelector('[data-setting="motion"]').addEventListener('change', (ev
 document.querySelector('[data-open-chat]').addEventListener('click', openChat);
 document.querySelector('[data-close-chat]').addEventListener('click', closeChat);
 document.querySelector('[data-clear-chat]').addEventListener('click', clearChat);
-document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat(); openTeamSupport(); }));
+document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat({ restoreFocus: false }); openTeamSupport(); }));
 document.querySelectorAll('[data-chat-prompt]').forEach((button) => button.addEventListener('click', () => { chatInput.value = button.dataset.chatPrompt; document.querySelector('#chat-form').requestSubmit(); }));
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !chatDrawer.hidden) closeChat(); });
 
 document.querySelector('#chat-form').addEventListener('submit', async (event) => {
   event.preventDefault(); const text = chatInput.value.trim(); if (!text || honeyIsResponding) return;
