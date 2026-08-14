@@ -21,6 +21,9 @@ html[data-theme="dark"] .icon-moon::after { background: var(--surface); }
 html[data-theme="dark"] textarea, html[data-theme="dark"] input { background: #102129; color: var(--ink); border-color: #54727b; }
 html[data-theme="dark"] .chat-disclosure { background: #4f4130; color: #fff1d4; }
 html[data-theme="dark"] .message.assistant { background: #245351; color: #f4ffff; }
+html[data-theme="dark"] .bear-launcher { background: #276575; color: #fff; border-color: #7eb3bc; box-shadow: 0 12px 34px rgba(0, 0, 0, .42); }
+html[data-theme="dark"] .bear-launcher:hover { background: #327889; border-color: #b5dce2; }
+html[data-theme="dark"][data-high-contrast="true"] .bear-launcher { background: #005f73; color: #fff; border: 2px solid #fff; }
 html[data-theme="dark"] .ambient-one { opacity: .22; } html[data-theme="dark"] .ambient-two { opacity: .2; }
 html[data-high-contrast="true"] { --ink: #111; --deep: #001e2a; --muted: #2a3439; --line: rgba(0,0,0,.65); }
 html[data-theme="dark"][data-high-contrast="true"] { --ink:#fff; --deep:#fff; --muted:#f1f5f6; --line:rgba(255,255,255,.78); --paper:#000; --surface:#111; }

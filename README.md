@@ -53,4 +53,14 @@ AI_API_KEY
 AI_MODEL
 ```
 
+Honey also supports local Ollama. For local development, use:
+
+```text
+AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen3.5:4b
+```
+
+The public Vercel deployment cannot connect directly to Ollama on a private Mac address. Production Ollama therefore needs a dedicated, authenticated HTTPS bridge or a private VPS endpoint; `OLLAMA_BEARER_TOKEN` is supported for that boundary. Do not expose Ollama directly to the public internet.
+
 For team check-in requests, add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Vercel, then apply the migration to the dedicated In Göd Hands Supabase project. Do not use an existing unrelated project for this sensitive data.

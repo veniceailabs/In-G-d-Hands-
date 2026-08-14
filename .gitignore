@@ -3,5 +3,6 @@
 .env.*
 !.env.example
 tmp/
-Mental Wellness App.pdf
+*.pdf
 .vercel
+Visual Proofs/
