@@ -295,6 +295,7 @@ function setTeamSupportEnabled(enabled) {
 }
 async function openTeamSupport() {
   teamSupportAvailable = false;
+  let intakeReason = '';
   setTeamSupportEnabled(false);
   teamSupportStatus.textContent = 'Checking whether a team check-in is available…';
   teamDialog.showModal();
@@ -302,12 +303,15 @@ async function openTeamSupport() {
     const response = await fetch('/api/support-request', { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const result = await response.json().catch(() => ({}));
     teamSupportAvailable = response.ok && result.available === true;
+    intakeReason = result.reason || '';
   } catch { teamSupportAvailable = false; }
   if (teamSupportAvailable) {
     setTeamSupportEnabled(true);
     teamSupportStatus.textContent = readTeamRequest() ? 'You have a request in this browser session. You can withdraw it below; a response time is not promised.' : 'The request form is available. Share only what feels right; a response time is not promised.';
   } else {
-    teamSupportStatus.textContent = 'Team check-ins are not available right now. You can still use the private support tools or Find A Helpline.';
+    teamSupportStatus.textContent = intakeReason === 'paused'
+      ? 'Team check-ins are taking a pause right now. You can still use the private support tools or Find A Helpline.'
+      : 'Team check-ins are not available right now. You can still use the private support tools or Find A Helpline.';
   }
 }
 function addMessage(text, kind = 'assistant') { const message = document.createElement('article'); message.className = `message ${kind}`; message.textContent = text; chatMessages.append(message); chatMessages.scrollTop = chatMessages.scrollHeight; return message; }

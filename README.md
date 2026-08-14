@@ -58,6 +58,10 @@ The first migration, [`supabase/migrations/20260814000000_team_support_requests.
 
 The console is a private owner tool, not team identity or audit logging. Before giving more people access, replace the shared-password gate with approved staff authentication, role-based access, response-time ownership, and an incident process. The queue does not send notifications or imply that someone is monitoring it continuously.
 
+### Capacity control
+
+Set `TEAM_SUPPORT_INTAKE=paused` in Vercel whenever the team cannot truthfully take new requests. The app will say that check-ins are taking a pause and will keep the private tools and independent support directory available. Set it back to `open` when covered capacity returns. This does not prevent someone from withdrawing a request they already submitted.
+
 ## Honey chat configuration
 
 Honey is a server-side API route (`/api/chat`) designed for an OpenAI-compatible provider. To activate it, add these production environment variables in Vercel:

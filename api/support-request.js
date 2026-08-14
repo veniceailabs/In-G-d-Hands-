@@ -8,6 +8,7 @@ function readBody(body) {
   if (typeof body !== 'string') return body || {};
   try { return JSON.parse(body); } catch { return {}; }
 }
+function intakeIsOpen() { return process.env.TEAM_SUPPORT_INTAKE !== 'paused'; }
 function tokenHash(token) { return createHash('sha256').update(token).digest('hex'); }
 function isRequestId(value) { return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value); }
 
@@ -15,6 +16,7 @@ export default async function handler(request, response) {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
   if (request.method === 'GET') {
     response.setHeader('Cache-Control', 'no-store');
+    if (!intakeIsOpen()) return reply(response, 200, { available: false, reason: 'paused' });
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return reply(response, 200, { available: false });
     try {
       const check = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/team_support_requests?select=id&limit=1`, {
@@ -40,6 +42,7 @@ export default async function handler(request, response) {
     } catch { return reply(response, 502, { error: 'The request cannot be withdrawn right now.' }); }
   }
   if (request.method !== 'POST') return reply(response, 405, { error: 'Method not allowed.' });
+  if (!intakeIsOpen()) return reply(response, 503, { error: 'Team check-ins are taking a pause right now. Please use the private support tools or Find A Helpline.' });
   const { name = '', contact = '', note = '', consent = false } = readBody(request.body);
   if (!consent || typeof note !== 'string' || note.trim().length < 2 || note.length > 1000) return reply(response, 400, { error: 'Please add a brief note and acknowledge the storage notice.' });
   if (typeof name !== 'string' || name.length > 80 || typeof contact !== 'string' || contact.length > 180) return reply(response, 400, { error: 'Please shorten the details you entered.' });
