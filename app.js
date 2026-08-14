@@ -27,7 +27,7 @@ const supportPaths = {
     reflection: 'You have been carrying a lot. Rest does not need to be earned.',
     options: [
       ['rest', '2 min', 'A permission slip to pause', 'Let yourself stop for one small breath.'],
-      ['brain-dump', '4 min', 'Check in with your needs', 'Make room for what is asking for care.'],
+      ['movement', '2 min', 'Make one gentle shift', 'Move in whatever small way feels comfortable for your body.'],
       ['next', '2 min', 'Protect your remaining energy', 'Choose one gentle boundary for today.'],
     ],
   },
@@ -62,6 +62,10 @@ const practiceLede = document.querySelector('#practice-lede');
 const practiceContent = document.querySelector('#practice-content');
 const practiceFooter = document.querySelector('#practice-footer');
 const completion = document.querySelector('#completion');
+const reminderDialog = document.querySelector('#reminder-dialog');
+const reminderForm = document.querySelector('#reminder-form');
+const reminderDateTime = document.querySelector('#reminder-date-time');
+const reminderStatus = document.querySelector('#reminder-status');
 const chatDrawer = document.querySelector('#chat-drawer');
 const chatOpeners = [...document.querySelectorAll('[data-open-chat]')];
 const chatMessages = document.querySelector('#chat-messages');
@@ -155,7 +159,10 @@ function practiceLayout({ eyebrow = 'A quiet practice', title, lede, content }) 
   const done = document.createElement('button');
   done.type = 'button'; done.className = 'primary-button'; done.textContent = 'I’m done for now';
   done.addEventListener('click', completeMoment);
-  practiceFooter.append(back, done);
+  const reminder = document.createElement('button');
+  reminder.type = 'button'; reminder.className = 'secondary-button practice-reminder'; reminder.textContent = 'Set a private reminder';
+  reminder.addEventListener('click', openReminder);
+  practiceFooter.append(back, reminder, done);
 }
 
 function createBreathingPractice({ title = 'Breathe with the room', lede = 'Let your breath be natural. This is an invitation, not a test.' } = {}) {
@@ -193,13 +200,19 @@ function createGroundingPractice() {
 
 function createBrainDumpPractice() {
   const wrap = document.createElement('div'); wrap.className = 'write-practice';
-  wrap.innerHTML = `<label for="brain-dump-input">Let it spill out</label><textarea id="brain-dump-input" rows="6" maxlength="1600" placeholder="You can write in fragments. Nothing here leaves this browser."></textarea><p class="write-note">This writing is not saved when you close this practice.</p><button class="primary-button" type="button" data-sort-thoughts>Choose one gentle next step</button><div class="sort-result" hidden><span class="sort-label">One thing to hold softly</span><p class="next-step-output"></p><p class="write-note">You can leave the rest here for now.</p></div>`;
+  wrap.innerHTML = `<label for="brain-dump-input">Let it spill out</label><textarea id="brain-dump-input" rows="6" maxlength="1600" placeholder="You can write in fragments. Nothing here leaves this browser."></textarea><p class="write-note">This writing is not saved when you close this practice.</p><button class="primary-button" type="button" data-sort-thoughts>Make one thing smaller</button><div class="sort-result" hidden><span class="sort-label">Choose a lane for one thought</span><p class="next-step-output"></p><div class="thought-actions" role="group" aria-label="Choose what to do with this thought"><button type="button" data-thought-path="now" aria-pressed="false">Do one small part</button><button type="button" data-thought-path="plan" aria-pressed="false">Put it in a plan</button><button type="button" data-thought-path="release" aria-pressed="false">Let it wait</button></div><p class="copy-status" role="status" aria-live="polite"></p><p class="write-note">This choice stays here. You can leave everything else for now.</p></div>`;
   wrap.querySelector('[data-sort-thoughts]').addEventListener('click', () => {
     const input = wrap.querySelector('textarea').value.trim(); const result = wrap.querySelector('.sort-result');
     const firstThought = input.split(/\n|[.!?]+/).map((item) => item.trim()).find(Boolean);
     result.querySelector('.next-step-output').textContent = firstThought ? `For now: ${firstThought}` : 'Try naming one thing that could wait until tomorrow.';
+    result.querySelector('.copy-status').textContent = '';
     result.hidden = false;
   });
+  wrap.querySelectorAll('[data-thought-path]').forEach((button) => button.addEventListener('click', () => {
+    const choices = { now: 'You chose one small part. Let that be enough for this moment.', plan: 'You chose to put it in a plan. It does not all need your attention right now.', release: 'You chose to let it wait. You are allowed to set something down for now.' };
+    wrap.querySelectorAll('[data-thought-path]').forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
+    wrap.querySelector('.copy-status').textContent = choices[button.dataset.thoughtPath];
+  }));
   practiceLayout({ title: 'Let it out of your head', lede: 'You do not need to make this neat. Write what is here, then keep only one small thread.', content: wrap });
 }
 
@@ -219,12 +232,42 @@ function createConnectionPractice() {
   practiceLayout({ title: 'Write a warm message', lede: 'Connection can start quietly. This is only a draft - you remain in control.', content: wrap });
 }
 
+function createMovementPractice() {
+  const wrap = document.createElement('div'); wrap.className = 'movement-practice';
+  const steps = [
+    ['Notice your support', 'Feel the chair, floor, bed, or anything already holding you.'],
+    ['Make one small adjustment', 'Soften your jaw, lower your shoulders, or shift your hands if that feels comfortable.'],
+    ['Choose your own motion', 'Stretch, reach, roll a shoulder, move a finger, or stay still. Your body gets the final say.'],
+  ];
+  steps.forEach(([title, note]) => {
+    const step = document.createElement('button'); step.type = 'button'; step.className = 'movement-step'; step.setAttribute('aria-pressed', 'false');
+    step.innerHTML = `<span class="movement-check" aria-hidden="true"></span><span><strong>${title}</strong><small>${note}</small></span>`;
+    step.addEventListener('click', () => { const done = step.classList.toggle('is-complete'); step.setAttribute('aria-pressed', String(done)); step.querySelector('.movement-check').textContent = done ? '✓' : ''; });
+    wrap.append(step);
+  });
+  const note = document.createElement('p'); note.className = 'write-note'; note.textContent = 'Skip any prompt that does not feel right for your body. Nothing needs to be completed.'; wrap.append(note);
+  practiceLayout({ title: 'Make one gentle shift', lede: 'This is not exercise. It is simply an invitation to notice or move in a way that feels available.', content: wrap });
+}
+
+function localCalendarTime(date) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+}
+function openReminder() {
+  const tomorrowEvening = new Date(); tomorrowEvening.setDate(tomorrowEvening.getDate() + 1); tomorrowEvening.setHours(19, 0, 0, 0);
+  const pad = (value) => String(value).padStart(2, '0');
+  reminderDateTime.value = `${tomorrowEvening.getFullYear()}-${pad(tomorrowEvening.getMonth() + 1)}-${pad(tomorrowEvening.getDate())}T${pad(tomorrowEvening.getHours())}:${pad(tomorrowEvening.getMinutes())}`;
+  reminderStatus.textContent = '';
+  reminderDialog.showModal();
+}
+
 function openPractice(id) {
   supportDialog.close();
   if (id === 'breathe') createBreathingPractice();
   else if (id === 'ground') createGroundingPractice();
   else if (id === 'brain-dump') createBrainDumpPractice();
   else if (id === 'connection') createConnectionPractice();
+  else if (id === 'movement') createMovementPractice();
   else if (id === 'rest') createBreathingPractice({ title: 'A permission slip to pause', lede: 'For the next minute, nothing needs to be solved. Let this be a small place to rest.' });
   else createNextStepPractice();
   practiceDialog.showModal();
@@ -285,7 +328,7 @@ document.querySelectorAll('[data-open-reflection]').forEach((button) => button.a
 document.querySelectorAll('[data-open-urgent]').forEach((button) => button.addEventListener('click', () => urgentDialog.showModal()));
 document.querySelector('[data-back]').addEventListener('click', () => supportDialog.close());
 document.querySelector('[data-reflect]').addEventListener('click', () => { const reflection = document.querySelector('#reflection-input').value.trim(); reflectionDialog.close(); showSupport('unsure'); if (reflection) supportReflection.textContent = 'Thank you for putting that into words. You do not have to carry it all at once. Which of these feels possible?'; });
-[supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
+[supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog, reminderDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
 practiceDialog.addEventListener('close', () => window.clearInterval(breathingTimer));
 
 document.querySelector('[data-open-accessibility]').addEventListener('click', () => accessibilityDialog.showModal());
@@ -301,6 +344,20 @@ document.querySelectorAll('[data-text-size]').forEach((button) => button.addEven
 }));
 document.querySelector('[data-setting="contrast"]').addEventListener('change', (event) => { preferences.contrast = event.target.checked; savePreferences(preferences); applyPreferences(); });
 document.querySelector('[data-setting="motion"]').addEventListener('change', (event) => { preferences.motion = event.target.checked; savePreferences(preferences); applyPreferences(); });
+
+reminderForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const date = new Date(reminderDateTime.value);
+  if (Number.isNaN(date.getTime())) { reminderStatus.textContent = 'Choose a time that works for you.'; return; }
+  const endsAt = new Date(date.getTime() + (15 * 60 * 1000));
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const uid = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const calendar = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//In Göd Hands//A quiet moment//EN', 'BEGIN:VEVENT', `UID:igh-${uid}@in-god-hands`, `DTSTAMP:${stamp}`, `DTSTART:${localCalendarTime(date)}`, `DTEND:${localCalendarTime(endsAt)}`, 'SUMMARY:A quiet moment', 'DESCRIPTION:A private reminder you chose for yourself.', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
+  const download = URL.createObjectURL(new Blob([calendar], { type: 'text/calendar;charset=utf-8' }));
+  const link = document.createElement('a'); link.href = download; link.download = 'a-quiet-moment.ics'; document.body.append(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(download), 1000);
+  reminderStatus.textContent = 'Your private calendar reminder is ready to add. In Göd Hands did not save it.';
+});
 
 chatOpeners.forEach((button) => button.addEventListener('click', openChat));
 document.querySelector('[data-close-chat]').addEventListener('click', closeChat);

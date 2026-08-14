@@ -160,6 +160,19 @@
       <div class="practice-footer" id="practice-footer"></div>
     </dialog>
 
+    <dialog class="reminder-dialog" id="reminder-dialog" aria-labelledby="reminder-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
+      <p class="step-label">A quiet return</p>
+      <h2 id="reminder-title">Choose a gentle time to come back.</h2>
+      <p>We will create a small calendar file for your device. In Göd Hands does not save this time or send a notification itself.</p>
+      <form id="reminder-form">
+        <label for="reminder-date-time">When would feel kind?</label>
+        <input id="reminder-date-time" type="datetime-local" required />
+        <button class="primary-button" type="submit">Download my reminder <span aria-hidden="true">↓</span></button>
+        <p class="form-status" id="reminder-status" role="status" aria-live="polite"></p>
+      </form>
+    </dialog>
+
     <dialog class="accessibility-dialog" id="accessibility-dialog" aria-labelledby="accessibility-title">
       <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
       <p class="step-label">Make this space yours</p>
