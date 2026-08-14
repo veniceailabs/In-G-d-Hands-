@@ -185,7 +185,8 @@
       <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
       <p class="step-label">A moment to notice</p>
       <h2 id="completion-title">We can leave it there.</h2>
-      <p class="completion-intro">There is nothing to get right. If you want to, notice how this moment feels now. This stays only on this page.</p>
+      <p class="completion-intro">There is nothing to get right. If you want to, notice how this moment feels now. By default, this stays only on this page.</p>
+      <p class="field-note completion-feedback-note" id="completion-feedback-note" hidden>Anonymous feedback is on. When you close this moment, we may save only this practice category and one response below - never your writing, chat, private-space ID, or contact details. You can turn it off in Privacy.</p>
       <section class="completion-check" aria-labelledby="completion-check-title">
         <h3 id="completion-check-title">Right now, it feels…</h3>
         <div class="completion-choices" role="group" aria-label="Optional reflection on this practice">
@@ -244,11 +245,16 @@
           <h3>About a private space</h3>
           <p>It is optional. It creates a random technical account ID without asking for personal information. It is tied to this browser session and cannot be recovered after you clear browser data or change devices.</p>
         </section>
+        <section>
+          <h3>If you choose anonymous feedback</h3>
+          <p>We would save only a practice category and an optional three-choice response. We would not include your name, private-space ID, writing, Honey messages, contact information, or device identifier.</p>
+        </section>
       </div>
       <details class="privacy-details">
         <summary>What technical information is involved?</summary>
         <p>Like nearly every website, our hosting, security, and database services may process limited technical information such as an IP address and browser data to run the service and prevent abuse. We do not use this to build a wellness profile or sell your information.</p>
       </details>
+      <label class="toggle-row"><span><span class="settings-label">Help us improve, anonymously</span><span class="settings-help">Off by default. When on, a practice completion can share only its category and your optional three-choice response. You can turn this off anytime.</span></span><input type="checkbox" data-setting="anonymous-feedback" /></label>
       <div class="private-space-action">
         <div><h3>Create an optional private space</h3><p>Today, it simply gives you a private, no-personal-info identity for features you explicitly choose to save in the future. All current practices remain unsaved by default.</p></div>
         <button class="primary-button" type="button" data-create-private-space>Create private space <span aria-hidden="true">→</span></button>

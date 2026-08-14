@@ -14,6 +14,7 @@ The first interactive surface is intentionally local-only:
 - keyboard-friendly dialogs and phone-responsive layout.
 - a persistent dark mode, text-size controls, high-contrast option, and reduced-motion option;
 - Honey, a clearly disclosed automated support guide, plus a private request-to-speak-with-the-team path.
+- an off-by-default, anonymous practice-feedback choice that sends only a practice category and optional three-choice response - never writing, chat, account ID, or contact details.
 
 It is not therapy, diagnosis, treatment, or an emergency service.
 

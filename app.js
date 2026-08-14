@@ -65,6 +65,8 @@ const practiceFooter = document.querySelector('#practice-footer');
 const completionDialog = document.querySelector('#completion-dialog');
 const completionStatus = document.querySelector('#completion-status');
 const completionChoices = [...document.querySelectorAll('[data-completion-feeling]')];
+const anonymousFeedbackSetting = document.querySelector('[data-setting="anonymous-feedback"]');
+const completionFeedbackNote = document.querySelector('#completion-feedback-note');
 const reminderDialog = document.querySelector('#reminder-dialog');
 const reminderForm = document.querySelector('#reminder-form');
 const reminderDateTime = document.querySelector('#reminder-date-time');
@@ -83,6 +85,9 @@ const privateSpaceTurnstile = document.querySelector('#private-space-turnstile')
 const cancelPrivateSpaceButton = document.querySelector('[data-cancel-private-space]');
 let breathingTimer;
 let currentSupportState = 'unsure';
+let currentPractice = 'next';
+let completionFeeling = '';
+let completionFeedbackSent = false;
 let chatHistory = [];
 let honeyIsResponding = false;
 let teamSupportAvailable = false;
@@ -96,7 +101,7 @@ function readPreferences() {
   try { return JSON.parse(localStorage.getItem('igh-preferences')) || {}; } catch { return {}; }
 }
 function savePreferences(next) { localStorage.setItem('igh-preferences', JSON.stringify(next)); }
-let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, ...readPreferences() };
+let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, anonymousFeedback: false, ...readPreferences() };
 
 function readPrivateSpace() {
   try { return JSON.parse(sessionStorage.getItem('igh-private-space') || 'null'); } catch { return null; }
@@ -138,6 +143,8 @@ function applyPreferences() {
   document.querySelectorAll('[data-theme]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === preferences.theme)));
   document.querySelector('[data-setting="contrast"]').checked = preferences.contrast;
   document.querySelector('[data-setting="motion"]').checked = preferences.motion;
+  anonymousFeedbackSetting.checked = preferences.anonymousFeedback;
+  completionFeedbackNote.hidden = !preferences.anonymousFeedback;
   document.querySelector('#text-size-status').textContent = preferences.textScale === 'default' ? 'Default' : preferences.textScale === 'large' ? 'Large' : 'Largest';
 }
 applyPreferences();
@@ -175,6 +182,8 @@ function completeMoment() {
   closePractice();
   if (supportDialog.open) supportDialog.close();
   completionChoices.forEach((button) => button.setAttribute('aria-pressed', 'false'));
+  completionFeeling = '';
+  completionFeedbackSent = false;
   completionStatus.textContent = '';
   completionDialog.showModal();
 }
@@ -295,6 +304,7 @@ function openReminder() {
 
 function openPractice(id) {
   if (supportDialog.open) supportDialog.close();
+  currentPractice = id;
   if (id === 'breathe') createBreathingPractice();
   else if (id === 'ground') createGroundingPractice();
   else if (id === 'brain-dump') createBrainDumpPractice();
@@ -367,6 +377,18 @@ document.querySelector('[data-reflect]').addEventListener('click', () => { const
 [supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog, reminderDialog, completionDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
 practiceDialog.addEventListener('close', () => window.clearInterval(breathingTimer));
 
+async function sendAnonymousFeedback(feeling) {
+  if (!preferences.anonymousFeedback) return false;
+  try {
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practiceId: currentPractice, feeling }),
+    });
+    return response.status === 202;
+  } catch { return false; }
+}
+
 completionChoices.forEach((button) => button.addEventListener('click', () => {
   completionChoices.forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
   const responses = {
@@ -374,8 +396,15 @@ completionChoices.forEach((button) => button.addEventListener('click', () => {
     'about the same': 'That is okay. You can close for now, or choose another gentle option.',
     'I want another option': 'Let’s find another gentle option. You are still in control of what comes next.',
   };
+  completionFeeling = button.dataset.completionFeeling;
   completionStatus.textContent = responses[button.dataset.completionFeeling];
 }));
+completionDialog.addEventListener('close', () => {
+  if (!completionFeedbackSent && completionFeeling) {
+    completionFeedbackSent = true;
+    void sendAnonymousFeedback(completionFeeling);
+  }
+});
 document.querySelector('[data-completion-more]').addEventListener('click', () => { completionDialog.close(); showSupport(currentSupportState); });
 
 document.querySelector('[data-open-accessibility]').addEventListener('click', () => accessibilityDialog.showModal());
@@ -391,6 +420,7 @@ document.querySelectorAll('[data-text-size]').forEach((button) => button.addEven
 }));
 document.querySelector('[data-setting="contrast"]').addEventListener('change', (event) => { preferences.contrast = event.target.checked; savePreferences(preferences); applyPreferences(); });
 document.querySelector('[data-setting="motion"]').addEventListener('change', (event) => { preferences.motion = event.target.checked; savePreferences(preferences); applyPreferences(); });
+anonymousFeedbackSetting.addEventListener('change', (event) => { preferences.anonymousFeedback = event.target.checked; savePreferences(preferences); applyPreferences(); });
 
 reminderForm.addEventListener('submit', (event) => {
   event.preventDefault();

@@ -15,10 +15,11 @@ This is an evidence-based operating boundary for the current product. It keeps t
 | Team check-in request | Live as a bounded intake tool | A person may voluntarily share a contact method and request a response. The app never promises a response time or continuous monitoring, and intake can be paused when the team is not covered. |
 | Owner support queue | Live as a private owner tool | The protected queue can show new and in-progress requests and capacity signals. It is not yet multi-staff access, an audit system, or evidence of staffed coverage. |
 | Accessibility and mobile use | Live | Responsive layout, keyboard-friendly dialogs, light/dark/system display, text size, contrast, reduced motion, and an installable offline shell for practices. Network features stay online-only and are never queued. |
+| Optional anonymous practice feedback | Live | Off by default. When enabled, it stores only a practice category and a three-choice completion response; no writing, account ID, chat, contact detail, or device identifier is included. |
 
 ## Built-in safeguards
 
-- No personal writing, Honey transcript, or reflection is stored by the app.
+- No personal writing, Honey transcript, or reflection is stored by the app. Optional anonymous practice feedback is the narrow exception described above.
 - Anonymous private-space creation is protected by server-side Turnstile verification.
 - Honey has urgent-language routing, clinical-resource routing, model-output guardrails, a small request pace limit, and no-store responses.
 - Team requests require informed consent, remain withdrawable from the same browser session, and are stored in a server-only Supabase queue.
