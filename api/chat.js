@@ -1,4 +1,5 @@
 const urgentPattern = /\b(?:kill myself|suicide|end my life|take my life|end it all|ending it|hurt myself|self[- ]?harm|not safe|immediate danger|want to die|(?:can(?:not|'t)|can not)\s+(?:keep|stay)\s+(?:myself\s+)?safe|(?:i(?:'m| am)|feel)\s+unsafe|(?:hurt|harm)\s+(?:myself|someone|another person|them)|(?:take|took)\s+(?:an\s+)?overdose|overdos(?:e|ed|ing))\b/i;
+const clinicalAdvicePattern = /\b(?:diagnos(?:e|ed|is)|do i have|medical advice|should i take (?:a |my )?(?:medication|medicine)|what medication|prescrib(?:e|ed|ing)|symptom(?:s)? of)\b/i;
 
 function reply(response, status, body) {
   response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').send(JSON.stringify(body));
@@ -38,6 +39,10 @@ export default async function handler(request, response) {
   if (urgentPattern.test(message)) return reply(response, 200, {
     type: 'urgent',
     message: 'I’m really glad you told me. Your immediate safety matters more than this chat. Please use the urgent-support option now to contact local emergency help or a trusted person nearby.',
+  });
+  if (clinicalAdvicePattern.test(message)) return reply(response, 200, {
+    type: 'professional',
+    message: 'I can’t assess symptoms, diagnose, or advise about medication. A licensed health professional can help with those questions. If you would like, I can point you toward additional support resources.',
   });
 
   const systemPrompt = 'You are Honey, a warm, concise, non-clinical AI support guide in In Göd Hands. Never diagnose, prescribe treatment, claim to be a therapist, or imply human availability. Offer gentle validation and at most one small, low-risk next step. Do not predict outcomes, give certainty-based reassurance, say that someone will be okay, or treat a feeling as universal. Do not shame, pressure, or overstate what you know. If a message signals immediate danger, direct the person to urgent support, local emergency help, or a trusted nearby person. Do not provide self-harm instructions. Keep responses under 110 words.';

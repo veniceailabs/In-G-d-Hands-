@@ -238,12 +238,17 @@ async function openTeamSupport() {
   } catch { teamSupportAvailable = false; }
   if (teamSupportAvailable) {
     setTeamSupportEnabled(true);
-    teamSupportStatus.textContent = 'Team check-ins are available. Share only what feels right.';
+    teamSupportStatus.textContent = 'The request form is available. Share only what feels right; a response time is not promised.';
   } else {
     teamSupportStatus.textContent = 'Team check-ins are not available right now. You can still use the private support tools or Find A Helpline.';
   }
 }
 function addMessage(text, kind = 'assistant') { const message = document.createElement('article'); message.className = `message ${kind}`; message.textContent = text; chatMessages.append(message); chatMessages.scrollTop = chatMessages.scrollHeight; return message; }
+function addProfessionalResourceAction() {
+  const action = document.createElement('button'); action.type = 'button'; action.className = 'chat-resource-action'; action.textContent = 'Find more support';
+  action.addEventListener('click', () => { closeChat(); resourcesDialog.showModal(); });
+  chatMessages.append(action); chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 function clearChat() {
   chatHistory = [];
   chatMessages.replaceChildren();
@@ -294,6 +299,7 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
     chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: result.message });
     chatHistory = chatHistory.slice(-8);
     if (result.type === 'urgent') urgentDialog.showModal();
+    if (result.type === 'professional') addProfessionalResourceAction();
   } catch { pending.remove(); const fallback = 'Honey’s live chat connection is not available just yet. You can still choose a gentle support path here or request a check-in with the team.'; addMessage(fallback); chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: fallback }); chatHistory = chatHistory.slice(-8); }
   finally { honeyIsResponding = false; sendChatButton.disabled = false; }
 });
