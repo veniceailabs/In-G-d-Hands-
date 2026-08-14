@@ -63,6 +63,7 @@ const practiceContent = document.querySelector('#practice-content');
 const practiceFooter = document.querySelector('#practice-footer');
 const completion = document.querySelector('#completion');
 const chatDrawer = document.querySelector('#chat-drawer');
+const chatOpeners = [...document.querySelectorAll('[data-open-chat]')];
 const chatMessages = document.querySelector('#chat-messages');
 const chatInput = document.querySelector('#chat-input');
 const sendChatButton = document.querySelector('[data-send-chat]');
@@ -76,6 +77,7 @@ let chatHistory = [];
 let honeyIsResponding = false;
 let teamSupportAvailable = false;
 let teamRequestCreationLocked = false;
+let lastChatOpener = chatOpeners[0];
 const honeyGreeting = 'Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?';
 
 function readPreferences() {
@@ -230,12 +232,13 @@ function openPractice(id) {
 
 function closeChat({ restoreFocus = true } = {}) {
   chatDrawer.hidden = true;
-  document.querySelector('[data-open-chat]').setAttribute('aria-expanded', 'false');
-  if (restoreFocus) document.querySelector('[data-open-chat]').focus();
+  chatOpeners.forEach((button) => button.setAttribute('aria-expanded', 'false'));
+  if (restoreFocus) lastChatOpener?.focus();
 }
-function openChat() {
+function openChat(event) {
+  lastChatOpener = event.currentTarget;
   chatDrawer.hidden = false;
-  document.querySelector('[data-open-chat]').setAttribute('aria-expanded', 'true');
+  chatOpeners.forEach((button) => button.setAttribute('aria-expanded', 'true'));
   chatInput.focus();
 }
 function setTeamSupportEnabled(enabled) {
@@ -299,7 +302,7 @@ document.querySelectorAll('[data-text-size]').forEach((button) => button.addEven
 document.querySelector('[data-setting="contrast"]').addEventListener('change', (event) => { preferences.contrast = event.target.checked; savePreferences(preferences); applyPreferences(); });
 document.querySelector('[data-setting="motion"]').addEventListener('change', (event) => { preferences.motion = event.target.checked; savePreferences(preferences); applyPreferences(); });
 
-document.querySelector('[data-open-chat]').addEventListener('click', openChat);
+chatOpeners.forEach((button) => button.addEventListener('click', openChat));
 document.querySelector('[data-close-chat]').addEventListener('click', closeChat);
 document.querySelector('[data-clear-chat]').addEventListener('click', clearChat);
 document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat({ restoreFocus: false }); openTeamSupport(); }));
