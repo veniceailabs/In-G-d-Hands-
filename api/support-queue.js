@@ -15,6 +15,29 @@ function supabaseHeaders(serviceRole, prefer = '') {
   return { apikey: serviceRole, Authorization: `Bearer ${serviceRole}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) };
 }
 
+function exactCount(response) {
+  const value = Number(response.headers.get('content-range')?.split('/').pop());
+  return Number.isSafeInteger(value) ? value : null;
+}
+
+async function queuePulse(baseUrl, serviceRole) {
+  const countQuery = (status) => new URLSearchParams({ select: 'id', status: `eq.${status}`, limit: '1' });
+  const oldestNewQuery = new URLSearchParams({ select: 'created_at', status: 'eq.new', order: 'created_at.asc', limit: '1' });
+  const [newRequests, activeRequests, oldestNewRequest] = await Promise.all([
+    fetch(`${baseUrl}?${countQuery('new')}`, { headers: supabaseHeaders(serviceRole, 'count=exact') }),
+    fetch(`${baseUrl}?${countQuery('in_progress')}`, { headers: supabaseHeaders(serviceRole, 'count=exact') }),
+    fetch(`${baseUrl}?${oldestNewQuery}`, { headers: supabaseHeaders(serviceRole) }),
+  ]);
+  if (!newRequests.ok || !activeRequests.ok || !oldestNewRequest.ok) return null;
+  const oldestRows = await oldestNewRequest.json();
+  const newest = Array.isArray(oldestRows) ? oldestRows[0] : null;
+  return {
+    newCount: exactCount(newRequests),
+    inProgressCount: exactCount(activeRequests),
+    oldestNewAt: typeof newest?.created_at === 'string' ? newest.created_at : null,
+  };
+}
+
 export default async function handler(request, response) {
   if (!ownerSessionIsValid(request)) return reply(response, 401, { error: 'Sign in is required.' });
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
@@ -33,8 +56,8 @@ export default async function handler(request, response) {
       const queue = await fetch(`${baseUrl}?${query}`, { headers: supabaseHeaders(SUPABASE_SERVICE_ROLE_KEY, 'count=exact') });
       if (!queue.ok) throw new Error('Queue read failed.');
       const rows = await queue.json();
-      const total = Number(queue.headers.get('content-range')?.split('/').pop());
-      return reply(response, 200, { requests: rows.slice(0, pageSize), hasMore: rows.length > pageSize, nextOffset: offset + pageSize, total: Number.isSafeInteger(total) ? total : null });
+      const pulse = await queuePulse(baseUrl, SUPABASE_SERVICE_ROLE_KEY).catch(() => null);
+      return reply(response, 200, { requests: rows.slice(0, pageSize), hasMore: rows.length > pageSize, nextOffset: offset + pageSize, total: exactCount(queue), pulse });
     }
     if (request.method === 'PATCH') {
       const { id, status } = readBody(request.body);

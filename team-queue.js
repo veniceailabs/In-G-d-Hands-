@@ -4,6 +4,7 @@ const loginForm = document.querySelector('#owner-login-form');
 const loginStatus = document.querySelector('#owner-login-status');
 const queueStatus = document.querySelector('#queue-status');
 const queueSummary = document.querySelector('#queue-summary');
+const queuePulse = document.querySelector('#queue-pulse');
 const queueList = document.querySelector('#queue-list');
 const loadMoreButton = document.querySelector('[data-load-more]');
 let currentFilter = 'all';
@@ -25,6 +26,8 @@ applySharedPreferences();
 function clearQueueDetails() {
   queueList.replaceChildren();
   queueSummary.textContent = '';
+  queuePulse.replaceChildren();
+  queuePulse.hidden = true;
   queueStatus.textContent = '';
   loadMoreButton.hidden = true;
   nextOffset = 0;
@@ -44,6 +47,24 @@ function dateLabel(value) {
 }
 function textElement(tag, text, className = '') {
   const element = document.createElement(tag); element.textContent = text; if (className) element.className = className; return element;
+}
+function queuePulseItem(label, value, detail = '') {
+  const item = document.createElement('div'); item.className = 'queue-pulse-item';
+  item.append(textElement('span', label, 'queue-pulse-label'), textElement('strong', value));
+  if (detail) item.append(textElement('span', detail, 'queue-pulse-detail'));
+  return item;
+}
+function renderQueuePulse(pulse) {
+  if (!pulse || !Number.isSafeInteger(pulse.newCount) || !Number.isSafeInteger(pulse.inProgressCount)) {
+    queuePulse.replaceChildren(); queuePulse.hidden = true; return;
+  }
+  const oldest = pulse.oldestNewAt ? dateLabel(pulse.oldestNewAt) : 'None waiting';
+  queuePulse.replaceChildren(
+    queuePulseItem('New', String(pulse.newCount), pulse.newCount === 1 ? 'Needs a first look' : 'Need a first look'),
+    queuePulseItem('In progress', String(pulse.inProgressCount), pulse.inProgressCount === 1 ? 'Being reviewed' : 'Being reviewed'),
+    queuePulseItem('Oldest new', oldest, pulse.oldestNewAt ? 'Received first' : 'Queue is clear'),
+  );
+  queuePulse.hidden = false;
 }
 
 function renderRequest(item) {
@@ -81,6 +102,7 @@ async function loadQueue({ append = false } = {}) {
     if (response.status === 401) return showLogin('Your private session has ended. Please sign in again.');
     if (!response.ok || !Array.isArray(result.requests)) throw new Error(result.error || 'Requests are unavailable right now.');
     loadedCount += result.requests.length; nextOffset = result.nextOffset;
+    renderQueuePulse(result.pulse);
     const totalLabel = Number.isInteger(result.total) ? `${loadedCount} of ${result.total}` : String(loadedCount);
     queueSummary.textContent = `${totalLabel} ${loadedCount === 1 ? 'request' : 'requests'} loaded · ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
     queueStatus.textContent = '';
