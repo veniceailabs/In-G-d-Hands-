@@ -249,11 +249,12 @@
       <form id="team-support-form">
         <label for="team-name">Name <span class="optional">(optional)</span></label>
         <input id="team-name" name="name" maxlength="80" autocomplete="name" />
-        <label for="team-contact">Email or phone <span class="optional">(optional)</span></label>
-        <input id="team-contact" name="contact" maxlength="180" autocomplete="email" inputmode="email" />
+        <label for="team-contact">Email or phone for a reply</label>
+        <input id="team-contact" name="contact" maxlength="180" autocomplete="email" inputmode="email" required aria-describedby="team-contact-note" />
+        <p class="field-note" id="team-contact-note">We use this only to respond to this request. We do not create a wellness profile from it.</p>
         <label for="team-note">What would feel helpful?</label>
         <textarea id="team-note" name="note" rows="4" maxlength="1000" required placeholder="A little about what you need from a conversation..."></textarea>
-        <label class="consent-row"><input type="checkbox" name="consent" required /> <span>I agree that In Göd Hands may store this request so the team can respond. I understand this is not emergency or clinical care.</span></label>
+        <label class="consent-row"><input type="checkbox" name="consent" required /> <span>I agree that In Göd Hands may store my contact method and this request so the team can respond. I understand this is not emergency or clinical care.</span></label>
         <div class="dialog-actions">
           <button class="secondary-button" type="button" data-close-dialog>Not now</button>
           <button class="primary-button" type="submit" data-team-submit disabled>Request a check-in <span aria-hidden="true">→</span></button>

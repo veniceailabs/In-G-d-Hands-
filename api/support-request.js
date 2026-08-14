@@ -19,6 +19,7 @@ export default async function handler(request, response) {
   const { name = '', contact = '', note = '', consent = false } = request.body || {};
   if (!consent || typeof note !== 'string' || note.trim().length < 2 || note.length > 1000) return reply(response, 400, { error: 'Please add a brief note and acknowledge the storage notice.' });
   if (typeof name !== 'string' || name.length > 80 || typeof contact !== 'string' || contact.length > 180) return reply(response, 400, { error: 'Please shorten the details you entered.' });
+  if (contact.trim().length < 3) return reply(response, 400, { error: 'Please share an email or phone number so the team can reply.' });
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return reply(response, 503, { error: 'Team requests are not configured yet.' });
   try {
     const insert = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/team_support_requests`, {
