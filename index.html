@@ -106,7 +106,7 @@
         <div class="promise-star" aria-hidden="true">✦</div>
         <div>
           <p class="step-label">Our promise</p>
-          <p>This is a non-clinical space for reflection and support. You are always in control of what you share, and you can leave any path at any time. <button class="inline-button" type="button" data-open-privacy>How privacy works</button></p>
+          <p>This is a non-clinical space for reflection and support. You are always in control of what you share, and you can leave any path at any time. <button class="inline-button" type="button" data-open-privacy>How privacy works</button> <span aria-hidden="true">·</span> <button class="inline-button" type="button" data-open-resources>Find more support</button></p>
         </div>
       </section>
     </main>
@@ -140,10 +140,10 @@
       <h2 id="urgent-title">Your safety matters most.</h2>
       <p>If you may be in immediate danger, contact your local emergency number now. If you can, move toward a safer place or reach out to a trusted person nearby.</p>
       <div class="urgent-actions">
-        <a class="primary-button" href="tel:911">Call emergency services</a>
+        <a class="primary-button" href="https://findahelpline.com/" target="_blank" rel="noreferrer">Find local crisis support <span aria-hidden="true">↗</span></a>
         <button class="secondary-button" type="button" data-open-reflection>I’d like a quiet moment first</button>
       </div>
-      <p class="urgent-note">Crisis and emergency resources vary by location. A public launch needs reviewed, local support pathways before this action is made available.</p>
+      <p class="urgent-note">The directory opens separately and lets you choose your own country and support type. It is not operated by In Göd Hands. If you are in immediate danger, contact your local emergency number now.</p>
     </dialog>
 
     <dialog class="practice-dialog" id="practice-dialog" aria-labelledby="practice-title">
@@ -210,6 +210,34 @@
       <label class="consent-row delete-space-confirm" hidden><input type="checkbox" data-confirm-delete-space /> <span>I understand that deleting this private space removes its anonymous account and cannot be undone.</span></label>
       <button class="secondary-button delete-space-button" type="button" data-delete-private-space hidden>Delete my private space</button>
       <p class="form-status" id="private-space-status" role="status" aria-live="polite"></p>
+    </dialog>
+
+    <dialog class="resources-dialog" id="resources-dialog" aria-labelledby="resources-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
+      <p class="step-label">When you want more support</p>
+      <h2 id="resources-title">You deserve choices, not pressure.</h2>
+      <p class="resource-intro">You do not need a label, diagnosis, or account to look for support. Choose only what feels right for this moment.</p>
+      <div class="resource-list">
+        <section class="resource-card resource-card-urgent">
+          <p class="resource-kicker">If you need urgent support</p>
+          <h3>Find a verified helpline near you.</h3>
+          <p>Search by your own country and topic for phone, text, and online support options. The directory opens in a separate tab.</p>
+          <a class="primary-button" href="https://findahelpline.com/" target="_blank" rel="noreferrer">Open Find A Helpline <span aria-hidden="true">↗</span></a>
+        </section>
+        <section class="resource-card">
+          <p class="resource-kicker">If connection could help</p>
+          <h3>Start with one familiar person.</h3>
+          <p>Use a private message draft. You decide whether it is edited, copied, sent, or simply left here.</p>
+          <button class="secondary-button resource-action" type="button" data-open-connection-draft>Write a message draft <span aria-hidden="true">→</span></button>
+        </section>
+        <section class="resource-card">
+          <p class="resource-kicker">If you want our team</p>
+          <h3>Ask for a human check-in.</h3>
+          <p>Share only what you choose. Team support is not therapy or emergency response, and immediate replies are never promised.</p>
+          <button class="secondary-button resource-action" type="button" data-open-team-from-resources>Request a check-in <span aria-hidden="true">→</span></button>
+        </section>
+      </div>
+      <p class="resource-note">Find A Helpline is an independent directory. In Göd Hands does not control its services or collect what you share after leaving this app.</p>
     </dialog>
 
     <dialog class="team-dialog" id="team-dialog" aria-labelledby="team-title">

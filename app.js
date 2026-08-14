@@ -48,6 +48,7 @@ const urgentDialog = document.querySelector('#urgent-dialog');
 const practiceDialog = document.querySelector('#practice-dialog');
 const accessibilityDialog = document.querySelector('#accessibility-dialog');
 const privacyDialog = document.querySelector('#privacy-dialog');
+const resourcesDialog = document.querySelector('#resources-dialog');
 const teamDialog = document.querySelector('#team-dialog');
 const supportReflection = document.querySelector('#support-reflection');
 const supportOptions = document.querySelector('#support-options');
@@ -222,11 +223,14 @@ document.querySelectorAll('[data-open-reflection]').forEach((button) => button.a
 document.querySelectorAll('[data-open-urgent]').forEach((button) => button.addEventListener('click', () => urgentDialog.showModal()));
 document.querySelector('[data-back]').addEventListener('click', () => supportDialog.close());
 document.querySelector('[data-reflect]').addEventListener('click', () => { const reflection = document.querySelector('#reflection-input').value.trim(); reflectionDialog.close(); showSupport('unsure'); if (reflection) supportReflection.textContent = 'Thank you for putting that into words. You do not have to carry it all at once. Which of these feels possible?'; });
-[supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, teamDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
+[supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
 practiceDialog.addEventListener('close', () => window.clearInterval(breathingTimer));
 
 document.querySelector('[data-open-accessibility]').addEventListener('click', () => accessibilityDialog.showModal());
 document.querySelector('[data-open-privacy]').addEventListener('click', () => { updatePrivateSpaceControls(); privacyDialog.showModal(); });
+document.querySelector('[data-open-resources]').addEventListener('click', () => resourcesDialog.showModal());
+document.querySelector('[data-open-connection-draft]').addEventListener('click', () => { resourcesDialog.close(); openPractice('connection'); });
+document.querySelector('[data-open-team-from-resources]').addEventListener('click', () => { resourcesDialog.close(); teamDialog.showModal(); });
 document.querySelectorAll('[data-theme]').forEach((button) => button.addEventListener('click', () => { preferences.theme = button.dataset.theme; savePreferences(preferences); applyPreferences(); }));
 document.querySelectorAll('[data-text-size]').forEach((button) => button.addEventListener('click', () => {
   const scales = ['default', 'large', 'larger']; let index = scales.indexOf(preferences.textScale);

@@ -16,6 +16,8 @@ The first interactive surface is intentionally local-only:
 
 It is not therapy, diagnosis, treatment, or an emergency service.
 
+The resource layer intentionally links to the independently maintained [Find A Helpline](https://findahelpline.com/) directory rather than guessing a visitor's country or emergency number. It opens separately and does not require an In Göd Hands account.
+
 ## Run locally
 
 Open `index.html` in a static local server. For example:
