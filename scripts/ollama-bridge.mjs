@@ -62,7 +62,7 @@ const server = createServer(async (request, response) => {
         model,
         stream: false,
         think: false,
-        options: { temperature: 0.55, num_predict: 180 },
+        options: { temperature: 0.45, num_predict: 100 },
         messages: input.messages,
       }),
     });

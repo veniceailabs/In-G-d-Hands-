@@ -14,12 +14,12 @@ function normalizeHoneyMessage(value) {
   return sentenceEnd > 70 ? shortened.slice(0, sentenceEnd + 1) : `${shortened}…`;
 }
 
-const reassuranceOrOverstatementPattern = /\b(?:you(?:'re| are) (?:going to|gonna|will) (?:be okay|be fine)|everything (?:will|is going to) (?:be okay|be fine|work out)|nobody (?:wants|feels)|everyone (?:feels|knows|goes through)|your future depends)\b/i;
+const reassuranceOrOverstatementPattern = /\b(?:you(?:'re| are) (?:going to|gonna|will) (?:be okay|be fine)|everything (?:will|is going to) (?:be okay|be fine|work out)|nobody (?:wants|feels)|everyone (?:feels|knows|goes through)|your future depends|it takes courage|you(?:'re| are) (?:already )?(?:doing|carrying)|matters more than you know|your (?:body|mind|nervous system) (?:is|might be|may be|was)|trying to protect|nothing (?:is|was) wrong with|you deserve)\b/i;
 const steadyFallback = 'That sounds like a lot to carry. You do not have to solve all of it right now. If it helps, choose one small next step: take a slow breath, notice what is supporting you, or put a few words on a page.';
 
-function safeHoneyOutput(value) {
+function safeHoneyOutput(value, fallback = steadyFallback) {
   const clean = normalizeHoneyMessage(value);
-  return clean && !reassuranceOrOverstatementPattern.test(clean) ? clean : steadyFallback;
+  return clean && !reassuranceOrOverstatementPattern.test(clean) ? clean : fallback;
 }
 
 function normalizeHistory(value) {
@@ -33,7 +33,7 @@ function normalizeHistory(value) {
 
 function guidedHoneyReply(message) {
   const text = message.toLowerCase();
-  if (/\b(?:anxious|anxiety|panic|panicked|nervous|racing|activated)\b/.test(text)) return 'We can make this smaller for a moment. Try placing both feet or hands somewhere supported, then let one exhale be a little longer than the inhale. You do not need to get it perfect.';
+  if (/\b(?:anxious|anxiety|panic|panicked|nervous|racing|activated|slow down)\b/.test(text)) return 'We can make this smaller for a moment. Try placing both feet or hands somewhere supported, then let one exhale be a little longer than the inhale. You do not need to get it perfect.';
   if (/\b(?:overwhelmed|too much|can(?:not|\'t)|can not cope|behind|tasks?|to[- ]?do)\b/.test(text)) return 'When there is too much, it can help to choose only one lane. Write down the first thing asking for your attention, then decide: one small part now, put it in a plan, or let it wait.';
   if (/\b(?:lonely|alone|isolated|disconnected|miss)\b/.test(text)) return 'Wanting some warmth or company makes sense. If it feels okay, you could make a private draft to one familiar person. You stay in control of whether it is ever sent.';
   if (/\b(?:tired|exhausted|drained|burned out|burnt out|no energy)\b/.test(text)) return 'You do not have to earn a pause. See if one small shift feels available: loosen your shoulders, take a sip of water, or let one task wait until later.';
@@ -54,7 +54,7 @@ export default async function handler(request, response) {
     message: 'I can’t assess symptoms, diagnose, or advise about medication. A licensed health professional can help with those questions. If you would like, I can point you toward additional support resources.',
   });
 
-  const systemPrompt = 'You are Honey, a warm, concise, non-clinical AI support guide in In Göd Hands. Never diagnose, prescribe treatment, claim to be a therapist, or imply human availability. Offer gentle validation and at most one small, low-risk next step. Do not predict outcomes, give certainty-based reassurance, say that someone will be okay, or treat a feeling as universal. Do not shame, pressure, or overstate what you know. If a message signals immediate danger, direct the person to urgent support, local emergency help, or a trusted nearby person. Do not provide self-harm instructions. Keep responses under 110 words.';
+  const systemPrompt = 'You are Honey, a warm, concise, non-clinical AI support guide in In Göd Hands. Never diagnose, prescribe treatment, claim to be a therapist, or imply human availability. Respond in no more than 70 words and offer at most one optional, low-risk next step. Do not characterize, praise, or explain the person, their body, mind, effort, history, or feelings. Do not infer causes, say why they feel something, promise outcomes, offer certainty, use therapy language, or say you know what they need or deserve. Avoid phrases such as "it takes courage," "your body is trying to protect you," and "you are already doing the hard work." Do not shame, pressure, or overstate what you know. If a message signals immediate danger, direct the person to urgent support, local emergency help, or a trusted nearby person. Do not provide self-harm instructions.';
   const provider = process.env.AI_PROVIDER || (process.env.OLLAMA_MODEL ? 'ollama' : 'openai-compatible');
   try {
     if (provider === 'ollama') {
@@ -71,7 +71,7 @@ export default async function handler(request, response) {
       });
       if (!ollamaResponse.ok) throw new Error(`Ollama returned ${ollamaResponse.status}`);
       const ollamaPayload = await ollamaResponse.json();
-      const ollamaOutput = safeHoneyOutput(ollamaPayload?.message?.content);
+      const ollamaOutput = safeHoneyOutput(ollamaPayload?.message?.content, guidedHoneyReply(message));
       return reply(response, 200, { type: 'support', message: ollamaOutput });
     }
 
