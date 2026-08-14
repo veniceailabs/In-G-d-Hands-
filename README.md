@@ -8,7 +8,8 @@ The first interactive surface is intentionally local-only:
 
 - state-based, user-selected support paths;
 - brief, non-diagnostic reflection prompts;
-- no data collection or network submission;
+- private practices and Honey conversation history remain on the current page only;
+- an optional, consented request for a team check-in is sent only to the protected server queue after the app confirms that queue is available;
 - visible urgent-support entry point;
 - keyboard-friendly dialogs and phone-responsive layout.
 - a persistent dark mode, text-size controls, high-contrast option, and reduced-motion option;

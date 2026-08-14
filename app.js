@@ -50,6 +50,9 @@ const accessibilityDialog = document.querySelector('#accessibility-dialog');
 const privacyDialog = document.querySelector('#privacy-dialog');
 const resourcesDialog = document.querySelector('#resources-dialog');
 const teamDialog = document.querySelector('#team-dialog');
+const teamSupportForm = document.querySelector('#team-support-form');
+const teamSupportStatus = document.querySelector('#team-form-status');
+const teamSupportSubmit = document.querySelector('[data-team-submit]');
 const supportReflection = document.querySelector('#support-reflection');
 const supportOptions = document.querySelector('#support-options');
 const practiceEyebrow = document.querySelector('#practice-eyebrow');
@@ -70,6 +73,7 @@ let breathingTimer;
 let currentSupportState = 'unsure';
 let chatHistory = [];
 let honeyIsResponding = false;
+let teamSupportAvailable = false;
 const honeyGreeting = 'Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?';
 
 function readPreferences() {
@@ -218,6 +222,27 @@ function openPractice(id) {
 
 function closeChat() { chatDrawer.hidden = true; document.querySelector('[data-open-chat]').focus(); }
 function openChat() { chatDrawer.hidden = false; chatInput.focus(); }
+function setTeamSupportEnabled(enabled) {
+  teamSupportForm.querySelectorAll('input, textarea').forEach((field) => { field.disabled = !enabled; });
+  teamSupportSubmit.disabled = !enabled;
+}
+async function openTeamSupport() {
+  teamSupportAvailable = false;
+  setTeamSupportEnabled(false);
+  teamSupportStatus.textContent = 'Checking whether a team check-in is available…';
+  teamDialog.showModal();
+  try {
+    const response = await fetch('/api/support-request', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    const result = await response.json().catch(() => ({}));
+    teamSupportAvailable = response.ok && result.available === true;
+  } catch { teamSupportAvailable = false; }
+  if (teamSupportAvailable) {
+    setTeamSupportEnabled(true);
+    teamSupportStatus.textContent = 'Team check-ins are available. Share only what feels right.';
+  } else {
+    teamSupportStatus.textContent = 'Team check-ins are not available right now. You can still use the private support tools or Find A Helpline.';
+  }
+}
 function addMessage(text, kind = 'assistant') { const message = document.createElement('article'); message.className = `message ${kind}`; message.textContent = text; chatMessages.append(message); chatMessages.scrollTop = chatMessages.scrollHeight; return message; }
 function clearChat() {
   chatHistory = [];
@@ -241,7 +266,7 @@ document.querySelector('[data-open-accessibility]').addEventListener('click', ()
 document.querySelector('[data-open-privacy]').addEventListener('click', () => { updatePrivateSpaceControls(); privacyDialog.showModal(); });
 document.querySelector('[data-open-resources]').addEventListener('click', () => resourcesDialog.showModal());
 document.querySelector('[data-open-connection-draft]').addEventListener('click', () => { resourcesDialog.close(); openPractice('connection'); });
-document.querySelector('[data-open-team-from-resources]').addEventListener('click', () => { resourcesDialog.close(); teamDialog.showModal(); });
+document.querySelector('[data-open-team-from-resources]').addEventListener('click', () => { resourcesDialog.close(); openTeamSupport(); });
 document.querySelectorAll('[data-theme]').forEach((button) => button.addEventListener('click', () => { preferences.theme = button.dataset.theme; savePreferences(preferences); applyPreferences(); }));
 document.querySelectorAll('[data-text-size]').forEach((button) => button.addEventListener('click', () => {
   const scales = ['default', 'large', 'larger']; let index = scales.indexOf(preferences.textScale);
@@ -254,7 +279,7 @@ document.querySelector('[data-setting="motion"]').addEventListener('change', (ev
 document.querySelector('[data-open-chat]').addEventListener('click', openChat);
 document.querySelector('[data-close-chat]').addEventListener('click', closeChat);
 document.querySelector('[data-clear-chat]').addEventListener('click', clearChat);
-document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat(); teamDialog.showModal(); }));
+document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat(); openTeamSupport(); }));
 document.querySelectorAll('[data-chat-prompt]').forEach((button) => button.addEventListener('click', () => { chatInput.value = button.dataset.chatPrompt; document.querySelector('#chat-form').requestSubmit(); }));
 
 document.querySelector('#chat-form').addEventListener('submit', async (event) => {
@@ -273,8 +298,9 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
   finally { honeyIsResponding = false; sendChatButton.disabled = false; }
 });
 
-document.querySelector('#team-support-form').addEventListener('submit', async (event) => {
-  event.preventDefault(); const form = event.currentTarget; const status = document.querySelector('#team-form-status'); const submit = form.querySelector('[type="submit"]');
+teamSupportForm.addEventListener('submit', async (event) => {
+  event.preventDefault(); const form = event.currentTarget; const status = teamSupportStatus; const submit = teamSupportSubmit;
+  if (!teamSupportAvailable) { status.textContent = 'Team check-ins are not available right now. Please use the support tools in the app or Find A Helpline.'; return; }
   const payload = { name: form.name.value.trim(), contact: form.contact.value.trim(), note: form.note.value.trim(), consent: form.consent.checked };
   submit.disabled = true; status.textContent = 'Sending your request…';
   try {

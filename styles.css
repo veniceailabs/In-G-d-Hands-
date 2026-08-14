@@ -164,6 +164,7 @@ input:not([type="checkbox"]) { display: block; width: 100%; border: 1px solid #b
 .stepper span { min-width: 3.8rem; color: var(--muted); font-size: .8rem; text-align: center; }
 .consent-row { display: flex; gap: .6rem; margin-top: 1rem; align-items: flex-start; color: var(--muted); font-size: .83rem; }
 .form-status { min-height: 1.4rem; margin: 1rem 0 0; color: var(--deep); font-weight: 700; font-size: .88rem; }
+.team-dialog form :disabled { cursor: not-allowed; opacity: .58; }
 .privacy-dialog { width: min(calc(100% - 2rem), 700px); }
 .privacy-intro { color: var(--muted); max-width: 590px; }
 .privacy-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin: 1.35rem 0; }
