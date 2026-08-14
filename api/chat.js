@@ -15,7 +15,7 @@ function normalizeHoneyMessage(value) {
 }
 
 const reassuranceOrOverstatementPattern = /\b(?:you(?:'re| are) (?:going to|gonna|will) (?:be okay|be fine)|everything (?:will|is going to) (?:be okay|be fine|work out)|nobody (?:wants|feels)|everyone (?:feels|knows|goes through)|your future depends)\b/i;
-const steadyFallback = 'That sounds like a lot to carry before an important conversation. You do not have to solve the whole meeting right now. If it feels useful, write down one sentence you want to communicate, then let that be enough for this moment.';
+const steadyFallback = 'That sounds like a lot to carry. You do not have to solve all of it right now. If it helps, choose one small next step: take a slow breath, notice what is supporting you, or put a few words on a page.';
 
 function safeHoneyOutput(value) {
   const clean = normalizeHoneyMessage(value);
@@ -29,6 +29,15 @@ function normalizeHistory(value) {
     const content = entry.content.trim();
     return content && content.length <= 800 ? [{ role: entry.role, content }] : [];
   });
+}
+
+function guidedHoneyReply(message) {
+  const text = message.toLowerCase();
+  if (/\b(?:anxious|anxiety|panic|panicked|nervous|racing|activated)\b/.test(text)) return 'We can make this smaller for a moment. Try placing both feet or hands somewhere supported, then let one exhale be a little longer than the inhale. You do not need to get it perfect.';
+  if (/\b(?:overwhelmed|too much|can(?:not|\'t)|can not cope|behind|tasks?|to[- ]?do)\b/.test(text)) return 'When there is too much, it can help to choose only one lane. Write down the first thing asking for your attention, then decide: one small part now, put it in a plan, or let it wait.';
+  if (/\b(?:lonely|alone|isolated|disconnected|miss)\b/.test(text)) return 'Wanting some warmth or company makes sense. If it feels okay, you could make a private draft to one familiar person. You stay in control of whether it is ever sent.';
+  if (/\b(?:tired|exhausted|drained|burned out|burnt out|no energy)\b/.test(text)) return 'You do not have to earn a pause. See if one small shift feels available: loosen your shoulders, take a sip of water, or let one task wait until later.';
+  return steadyFallback;
 }
 
 export default async function handler(request, response) {
@@ -67,7 +76,7 @@ export default async function handler(request, response) {
     }
 
     const { AI_BASE_URL, AI_API_KEY, AI_MODEL } = process.env;
-    if (!AI_BASE_URL || !AI_API_KEY || !AI_MODEL) return reply(response, 503, { error: 'Honey is not configured yet.' });
+    if (!AI_BASE_URL || !AI_API_KEY || !AI_MODEL) return reply(response, 200, { type: 'support', mode: 'guided', message: guidedHoneyReply(message) });
     const providerResponse = await fetch(`${AI_BASE_URL.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${AI_API_KEY}`, 'Content-Type': 'application/json' },
@@ -79,5 +88,5 @@ export default async function handler(request, response) {
     if (!providerResponse.ok) throw new Error(`Provider returned ${providerResponse.status}`);
     const payload = await providerResponse.json(); const output = safeHoneyOutput(payload?.choices?.[0]?.message?.content);
     return reply(response, 200, { type: 'support', message: output });
-  } catch { return reply(response, 502, { error: 'Honey could not reach the support service.' }); }
+  } catch { return reply(response, 200, { type: 'support', mode: 'guided', message: guidedHoneyReply(message) }); }
 }
