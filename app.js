@@ -61,12 +61,16 @@ const completion = document.querySelector('#completion');
 const chatDrawer = document.querySelector('#chat-drawer');
 const chatMessages = document.querySelector('#chat-messages');
 const chatInput = document.querySelector('#chat-input');
+const sendChatButton = document.querySelector('[data-send-chat]');
 const createPrivateSpaceButton = document.querySelector('[data-create-private-space]');
 const deletePrivateSpaceButton = document.querySelector('[data-delete-private-space]');
 const confirmDeleteSpace = document.querySelector('[data-confirm-delete-space]');
 const deleteSpaceConfirmRow = document.querySelector('.delete-space-confirm');
 let breathingTimer;
 let currentSupportState = 'unsure';
+let chatHistory = [];
+let honeyIsResponding = false;
+const honeyGreeting = 'Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?';
 
 function readPreferences() {
   try { return JSON.parse(localStorage.getItem('igh-preferences')) || {}; } catch { return {}; }
@@ -215,6 +219,13 @@ function openPractice(id) {
 function closeChat() { chatDrawer.hidden = true; document.querySelector('[data-open-chat]').focus(); }
 function openChat() { chatDrawer.hidden = false; chatInput.focus(); }
 function addMessage(text, kind = 'assistant') { const message = document.createElement('article'); message.className = `message ${kind}`; message.textContent = text; chatMessages.append(message); chatMessages.scrollTop = chatMessages.scrollHeight; return message; }
+function clearChat() {
+  chatHistory = [];
+  chatMessages.replaceChildren();
+  addMessage(honeyGreeting);
+  chatInput.value = '';
+  addMessage('This conversation has been cleared from this page.', 'loading');
+}
 
 document.querySelectorAll('[data-state]').forEach((button) => button.addEventListener('click', () => showSupport(button.dataset.state)));
 document.querySelectorAll('[data-practice]').forEach((button) => button.addEventListener('click', () => openPractice(button.dataset.practice)));
@@ -242,19 +253,24 @@ document.querySelector('[data-setting="motion"]').addEventListener('change', (ev
 
 document.querySelector('[data-open-chat]').addEventListener('click', openChat);
 document.querySelector('[data-close-chat]').addEventListener('click', closeChat);
+document.querySelector('[data-clear-chat]').addEventListener('click', clearChat);
 document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat(); teamDialog.showModal(); }));
 document.querySelectorAll('[data-chat-prompt]').forEach((button) => button.addEventListener('click', () => { chatInput.value = button.dataset.chatPrompt; document.querySelector('#chat-form').requestSubmit(); }));
 
 document.querySelector('#chat-form').addEventListener('submit', async (event) => {
-  event.preventDefault(); const text = chatInput.value.trim(); if (!text) return;
+  event.preventDefault(); const text = chatInput.value.trim(); if (!text || honeyIsResponding) return;
+  honeyIsResponding = true; sendChatButton.disabled = true;
   addMessage(text, 'user'); chatInput.value = ''; const pending = addMessage('Honey is thinking…', 'loading');
   try {
-    const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+    const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history: chatHistory.slice(-6) }) });
     const result = await response.json(); pending.remove();
     if (!response.ok) throw new Error(result.error || 'Chat is unavailable.');
     addMessage(result.message);
+    chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: result.message });
+    chatHistory = chatHistory.slice(-8);
     if (result.type === 'urgent') urgentDialog.showModal();
-  } catch { pending.remove(); addMessage('Honey’s live chat connection is not available just yet. You can still choose a gentle support path here or request a check-in with the team.'); }
+  } catch { pending.remove(); const fallback = 'Honey’s live chat connection is not available just yet. You can still choose a gentle support path here or request a check-in with the team.'; addMessage(fallback); chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: fallback }); chatHistory = chatHistory.slice(-8); }
+  finally { honeyIsResponding = false; sendChatButton.disabled = false; }
 });
 
 document.querySelector('#team-support-form').addEventListener('submit', async (event) => {

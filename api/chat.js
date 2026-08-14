@@ -1,4 +1,4 @@
-const urgentPattern = /\b(kill myself|suicide|end my life|hurt myself|self[- ]?harm|not safe|immediate danger|want to die)\b/i;
+const urgentPattern = /\b(?:kill myself|suicide|end my life|take my life|end it all|ending it|hurt myself|self[- ]?harm|not safe|immediate danger|want to die|(?:can(?:not|'t)|can not)\s+(?:keep|stay)\s+(?:myself\s+)?safe|(?:i(?:'m| am)|feel)\s+unsafe|(?:hurt|harm)\s+(?:myself|someone|another person|them)|(?:take|took)\s+(?:an\s+)?overdose|overdos(?:e|ed|ing))\b/i;
 
 function reply(response, status, body) {
   response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').send(JSON.stringify(body));
@@ -13,9 +13,19 @@ function normalizeHoneyMessage(value) {
   return sentenceEnd > 70 ? shortened.slice(0, sentenceEnd + 1) : `${shortened}…`;
 }
 
+function normalizeHistory(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-6).flatMap((entry) => {
+    if (!entry || !['user', 'assistant'].includes(entry.role) || typeof entry.content !== 'string') return [];
+    const content = entry.content.trim();
+    return content && content.length <= 800 ? [{ role: entry.role, content }] : [];
+  });
+}
+
 export default async function handler(request, response) {
   if (request.method !== 'POST') return reply(response, 405, { error: 'Method not allowed.' });
   const message = typeof request.body?.message === 'string' ? request.body.message.trim() : '';
+  const history = normalizeHistory(request.body?.history);
   if (!message || message.length > 800) return reply(response, 400, { error: 'Please send a message of up to 800 characters.' });
   if (urgentPattern.test(message)) return reply(response, 200, {
     type: 'urgent',
@@ -33,7 +43,7 @@ export default async function handler(request, response) {
       const ollamaResponse = await fetch(`${baseUrl.replace(/\/$/, '')}/api/chat`, {
         method: 'POST', headers,
         body: JSON.stringify({ model, stream: false, think: false, options: { temperature: 0.55, num_predict: 180 }, messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: systemPrompt }, ...history,
           { role: 'user', content: message },
         ] }),
       });
@@ -50,7 +60,7 @@ export default async function handler(request, response) {
       method: 'POST',
       headers: { Authorization: `Bearer ${AI_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: AI_MODEL, temperature: 0.55, max_tokens: 180, messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompt }, ...history,
         { role: 'user', content: message },
       ] }),
     });

@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#f5f1ea" />
     <meta name="description" content="A gentle, non-clinical space for finding one supportive next step." />
     <title>In Göd Hands - A moment of support</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -272,7 +273,7 @@
         <div><p class="step-label">Gentle chat support</p><h2 id="chat-title">Honey is here.</h2></div>
         <button class="dialog-close" type="button" aria-label="Close chat" data-close-chat>×</button>
       </header>
-      <p class="chat-disclosure">Honey is an automated, non-clinical support guide - not a therapist or emergency service. Share only what feels okay.</p>
+      <div class="chat-disclosure"><span>Honey is an automated, non-clinical support guide - not a therapist or emergency service. This conversation stays only in this open page so Honey can follow along. <strong>Share only what feels okay.</strong></span><button class="chat-clear" type="button" data-clear-chat>Clear this chat</button></div>
       <div class="chat-messages" id="chat-messages" aria-live="polite">
         <article class="message assistant">Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?</article>
       </div>
@@ -284,7 +285,7 @@
       <form class="chat-form" id="chat-form">
         <label class="sr-only" for="chat-input">Message Honey</label>
         <textarea id="chat-input" rows="1" maxlength="800" placeholder="Write a message..." required></textarea>
-        <button class="send-button" type="submit" aria-label="Send message">↑</button>
+        <button class="send-button" type="submit" aria-label="Send message" data-send-chat>↑</button>
       </form>
       <button class="team-link" type="button" data-open-team>Rather speak with the team? Request a check-in <span aria-hidden="true">→</span></button>
     </section>
