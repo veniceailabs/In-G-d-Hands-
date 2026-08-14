@@ -173,6 +173,26 @@
       </form>
     </dialog>
 
+    <dialog class="completion-dialog" id="completion-dialog" aria-labelledby="completion-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
+      <p class="step-label">A moment to notice</p>
+      <h2 id="completion-title">We can leave it there.</h2>
+      <p class="completion-intro">There is nothing to get right. If you want to, notice how this moment feels now. This stays only on this page.</p>
+      <section class="completion-check" aria-labelledby="completion-check-title">
+        <h3 id="completion-check-title">Right now, it feels…</h3>
+        <div class="completion-choices" role="group" aria-label="Optional reflection on this practice">
+          <button type="button" data-completion-feeling="a little different" aria-pressed="false">A little different</button>
+          <button type="button" data-completion-feeling="about the same" aria-pressed="false">About the same</button>
+          <button type="button" data-completion-feeling="I want another option" aria-pressed="false">I want another option</button>
+        </div>
+        <p class="copy-status completion-status" id="completion-status" role="status" aria-live="polite"></p>
+      </section>
+      <div class="dialog-actions completion-actions">
+        <button class="secondary-button" type="button" data-completion-more>See another gentle option</button>
+        <button class="primary-button" type="button" data-close-dialog>Close for now</button>
+      </div>
+    </dialog>
+
     <dialog class="accessibility-dialog" id="accessibility-dialog" aria-labelledby="accessibility-title">
       <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
       <p class="step-label">Make this space yours</p>
@@ -314,9 +334,6 @@
       <button class="team-link" type="button" data-open-team>Rather speak with the team? Request a check-in <span aria-hidden="true">→</span></button>
     </section>
 
-    <div class="completion" id="completion" role="status" aria-live="polite" hidden>
-      <span aria-hidden="true">✦</span> You gave yourself a moment. That matters.
-    </div>
     <script src="app.js"></script>
   </body>
 </html>

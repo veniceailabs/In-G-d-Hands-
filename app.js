@@ -61,7 +61,9 @@ const practiceTitle = document.querySelector('#practice-title');
 const practiceLede = document.querySelector('#practice-lede');
 const practiceContent = document.querySelector('#practice-content');
 const practiceFooter = document.querySelector('#practice-footer');
-const completion = document.querySelector('#completion');
+const completionDialog = document.querySelector('#completion-dialog');
+const completionStatus = document.querySelector('#completion-status');
+const completionChoices = [...document.querySelectorAll('[data-completion-feeling]')];
 const reminderDialog = document.querySelector('#reminder-dialog');
 const reminderForm = document.querySelector('#reminder-form');
 const reminderDateTime = document.querySelector('#reminder-date-time');
@@ -159,8 +161,10 @@ function closePractice() {
   if (practiceDialog.open) practiceDialog.close();
 }
 function completeMoment() {
-  closePractice(); supportDialog.close(); completion.hidden = false;
-  window.setTimeout(() => { completion.hidden = true; }, 5000);
+  closePractice(); supportDialog.close();
+  completionChoices.forEach((button) => button.setAttribute('aria-pressed', 'false'));
+  completionStatus.textContent = '';
+  completionDialog.showModal();
 }
 
 function practiceLayout({ eyebrow = 'A quiet practice', title, lede, content }) {
@@ -348,8 +352,19 @@ document.querySelectorAll('[data-open-reflection]').forEach((button) => button.a
 document.querySelectorAll('[data-open-urgent]').forEach((button) => button.addEventListener('click', () => urgentDialog.showModal()));
 document.querySelector('[data-back]').addEventListener('click', () => supportDialog.close());
 document.querySelector('[data-reflect]').addEventListener('click', () => { const reflection = document.querySelector('#reflection-input').value.trim(); reflectionDialog.close(); showSupport('unsure'); if (reflection) supportReflection.textContent = 'Thank you for putting that into words. You do not have to carry it all at once. Which of these feels possible?'; });
-[supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog, reminderDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
+[supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog, reminderDialog, completionDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
 practiceDialog.addEventListener('close', () => window.clearInterval(breathingTimer));
+
+completionChoices.forEach((button) => button.addEventListener('click', () => {
+  completionChoices.forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+  const responses = {
+    'a little different': 'Thank you for noticing. You can close for now, or choose another gentle option.',
+    'about the same': 'That is okay. You can close for now, or choose another gentle option.',
+    'I want another option': 'Let’s find another gentle option. You are still in control of what comes next.',
+  };
+  completionStatus.textContent = responses[button.dataset.completionFeeling];
+}));
+document.querySelector('[data-completion-more]').addEventListener('click', () => { completionDialog.close(); showSupport(currentSupportState); });
 
 document.querySelector('[data-open-accessibility]').addEventListener('click', () => accessibilityDialog.showModal());
 document.querySelector('[data-open-privacy]').addEventListener('click', () => { updatePrivateSpaceControls(); privacyDialog.showModal(); });
