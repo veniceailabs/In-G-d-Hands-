@@ -1,4 +1,4 @@
-const urgentPattern = /\b(?:kill myself|suicide|end my life|take my life|end it all|ending it|hurt myself|self[- ]?harm|not safe|immediate danger|want to die|(?:can(?:not|'t)|can not)\s+(?:keep|stay)\s+(?:myself\s+)?safe|(?:i(?:'m| am)|feel)\s+unsafe|(?:hurt|harm)\s+(?:myself|someone|another person|them)|(?:take|took)\s+(?:an\s+)?overdose|overdos(?:e|ed|ing))\b/i;
+const urgentPattern = /\b(?:kill myself|suicide|end my life|take my life|end it all|ending it|hurt myself|self[- ]?harm|not safe|immediate danger|want to die|(?:can(?:not|'t)|can not)\s+(?:keep|stay)\s+(?:myself\s+)?safe|i\s+(?:do\s+not|don't|cannot|can't|can\s+not)\s+(?:feel|stay|keep)\s+(?:myself\s+)?safe|(?:i(?:'m| am)|feel)\s+unsafe|(?:hurt|harm)\s+(?:myself|someone|another person|them)|(?:take|took)\s+(?:an\s+)?overdose|overdos(?:e|ed|ing))\b/i;
 const clinicalAdvicePattern = /\b(?:diagnos(?:e|ed|is)|do i have|medical advice|should i take (?:a |my )?(?:medication|medicine)|what medication|prescrib(?:e|ed|ing)|symptom(?:s)? of)\b/i;
 
 function reply(response, status, body) {
