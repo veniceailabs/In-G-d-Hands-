@@ -2,11 +2,26 @@ function reply(response, status, body) {
   response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').setHeader('Cache-Control', 'no-store').send(JSON.stringify(body));
 }
 
+async function verifyTurnstile(token, request, secret) {
+  if (typeof token !== 'string' || token.length < 10 || token.length > 4096) return false;
+  const body = new URLSearchParams({ secret, response: token });
+  const forwardedFor = String(request.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  if (forwardedFor) body.set('remoteip', forwardedFor);
+  const verification = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+    signal: AbortSignal.timeout(8000),
+  });
+  const result = await verification.json().catch(() => ({}));
+  return verification.ok && result.success === true;
+}
+
 export default async function handler(request, response) {
   if (!['POST', 'DELETE'].includes(request.method)) return reply(response, 405, { error: 'Method not allowed.' });
 
-  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, TURNSTILE_SECRET_KEY } = process.env;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !TURNSTILE_SECRET_KEY) {
     return reply(response, 503, { error: 'Private spaces are being prepared. You can still use every support tool without an account.' });
   }
 
@@ -29,6 +44,10 @@ export default async function handler(request, response) {
       if (!deletion.ok) return reply(response, 502, { error: 'We could not delete your private space. Please try again.' });
       return reply(response, 200, { deleted: true });
     }
+
+    const { turnstileToken } = request.body || {};
+    const humanVerified = await verifyTurnstile(turnstileToken, request, TURNSTILE_SECRET_KEY);
+    if (!humanVerified) return reply(response, 403, { error: 'We could not complete the quick security check. Please try again.' });
 
     const account = await fetch(`${authUrl}/signup`, {
       method: 'POST',

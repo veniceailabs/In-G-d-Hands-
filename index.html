@@ -225,6 +225,12 @@
         <div><h3>Create an optional private space</h3><p>Today, it simply gives you a private, no-personal-info identity for features you explicitly choose to save in the future. All current practices remain unsaved by default.</p></div>
         <button class="primary-button" type="button" data-create-private-space>Create private space <span aria-hidden="true">→</span></button>
       </div>
+      <section class="private-space-check" id="private-space-check" hidden aria-labelledby="private-space-check-title">
+        <h3 id="private-space-check-title">One quick security check</h3>
+        <p>It helps protect this anonymous space from automated sign-ups. It does not ask for your name, email, phone number, or wellness information.</p>
+        <div id="private-space-turnstile" aria-label="Security verification"></div>
+        <button class="secondary-button" type="button" data-cancel-private-space>Not now</button>
+      </section>
       <label class="consent-row delete-space-confirm" hidden><input type="checkbox" data-confirm-delete-space /> <span>I understand that deleting this private space removes its anonymous account and cannot be undone.</span></label>
       <button class="secondary-button delete-space-button" type="button" data-delete-private-space hidden>Delete my private space</button>
       <p class="form-status" id="private-space-status" role="status" aria-live="polite"></p>

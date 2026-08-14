@@ -192,6 +192,11 @@ input:not([type="checkbox"]) { display: block; width: 100%; border: 1px solid #b
 .privacy-details p { margin: .6rem 0 0; }
 .private-space-action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; background: rgba(184, 216, 220, .16); }
 .private-space-action > div { max-width: 440px; }
+.private-space-check { border: 1px solid var(--line); border-radius: 1rem; padding: .95rem; margin-top: .75rem; background: rgba(184, 216, 220, .1); }
+.private-space-check h3 { color: var(--deep); font-size: .95rem; margin: 0 0 .3rem; }
+.private-space-check p { color: var(--muted); font-size: .84rem; margin: 0; max-width: 530px; }
+#private-space-turnstile { min-height: 65px; margin-top: .85rem; }
+.private-space-check .secondary-button { margin-top: .65rem; }
 .resources-dialog { width: min(calc(100% - 2rem), 700px); }
 .resource-intro, .resource-note { max-width: 590px; color: var(--muted); }
 .resource-list { display: grid; gap: .75rem; margin-top: 1.35rem; }

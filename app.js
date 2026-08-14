@@ -75,6 +75,9 @@ const createPrivateSpaceButton = document.querySelector('[data-create-private-sp
 const deletePrivateSpaceButton = document.querySelector('[data-delete-private-space]');
 const confirmDeleteSpace = document.querySelector('[data-confirm-delete-space]');
 const deleteSpaceConfirmRow = document.querySelector('.delete-space-confirm');
+const privateSpaceCheck = document.querySelector('#private-space-check');
+const privateSpaceTurnstile = document.querySelector('#private-space-turnstile');
+const cancelPrivateSpaceButton = document.querySelector('[data-cancel-private-space]');
 let breathingTimer;
 let currentSupportState = 'unsure';
 let chatHistory = [];
@@ -82,6 +85,8 @@ let honeyIsResponding = false;
 let teamSupportAvailable = false;
 let teamRequestCreationLocked = false;
 let lastChatOpener = chatOpeners[0];
+let turnstileScriptPromise;
+let turnstileWidgetId;
 const honeyGreeting = 'Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?';
 
 function readPreferences() {
@@ -102,11 +107,19 @@ function readTeamRequest() {
 function removeTeamRequest() {
   try { sessionStorage.removeItem('igh-team-request'); } catch { /* The request remains protected by its server-side token. */ }
 }
+function clearPrivateSpaceCheck() {
+  if (turnstileWidgetId !== undefined && window.turnstile?.remove) window.turnstile.remove(turnstileWidgetId);
+  turnstileWidgetId = undefined;
+  privateSpaceTurnstile.replaceChildren();
+  privateSpaceCheck.hidden = true;
+}
+
 function updatePrivateSpaceControls() {
   const active = Boolean(readPrivateSpace()?.access_token);
   createPrivateSpaceButton.hidden = active;
   deletePrivateSpaceButton.hidden = !active;
   deleteSpaceConfirmRow.hidden = !active;
+  if (active) clearPrivateSpaceCheck();
   if (!active) confirmDeleteSpace.checked = false;
 }
 
@@ -424,16 +437,31 @@ withdrawTeamRequestButton.addEventListener('click', async () => {
   finally { withdrawTeamRequestButton.disabled = false; }
 });
 
-createPrivateSpaceButton.addEventListener('click', async (event) => {
-  const button = event.currentTarget;
-  const status = document.querySelector('#private-space-status');
-  if (readPrivateSpace()?.access_token) {
-    status.textContent = 'Your private space is already ready in this browser session.';
-    return;
+function loadTurnstile() {
+  if (window.turnstile) return Promise.resolve(window.turnstile);
+  if (!turnstileScriptPromise) {
+    turnstileScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error('The security check did not load. Please try again.'));
+      script.onerror = () => reject(new Error('The security check did not load. Please try again.'));
+      document.head.append(script);
+    });
   }
-  button.disabled = true; status.textContent = 'Creating your private space…';
+  return turnstileScriptPromise;
+}
+
+async function createPrivateSpace(turnstileToken) {
+  const status = document.querySelector('#private-space-status');
+  createPrivateSpaceButton.disabled = true;
+  status.textContent = 'Creating your private space…';
   try {
-    const response = await fetch('/api/private-account', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    const response = await fetch('/api/private-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ turnstileToken }),
+    });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.session?.access_token) throw new Error(result.error || 'Private spaces are not available yet.');
     try { sessionStorage.setItem('igh-private-space', JSON.stringify(result.session)); } catch { throw new Error('Your browser is blocking the private-space session. You can still use every support tool without an account.'); }
@@ -441,8 +469,47 @@ createPrivateSpaceButton.addEventListener('click', async (event) => {
     status.textContent = 'Your private space is ready for this browser session. No name, email, phone number, or wellness profile was requested.';
   } catch (error) {
     status.textContent = error.message || 'Private spaces are not available yet. You can still use every support tool without an account.';
-    button.disabled = false;
+    createPrivateSpaceButton.disabled = false;
+    if (turnstileWidgetId !== undefined && window.turnstile?.reset) window.turnstile.reset(turnstileWidgetId);
   }
+}
+
+createPrivateSpaceButton.addEventListener('click', async () => {
+  const status = document.querySelector('#private-space-status');
+  if (readPrivateSpace()?.access_token) {
+    status.textContent = 'Your private space is already ready in this browser session.';
+    return;
+  }
+  createPrivateSpaceButton.disabled = true;
+  status.textContent = 'Preparing a quick security check…';
+  try {
+    const configResponse = await fetch('/api/private-space-config', { cache: 'no-store' });
+    const config = await configResponse.json().catch(() => ({}));
+    if (!configResponse.ok || !config.enabled || !config.siteKey) throw new Error('Private spaces are being prepared. You can still use every support tool without an account.');
+    privateSpaceCheck.hidden = false;
+    const turnstile = await loadTurnstile();
+    if (turnstileWidgetId !== undefined) turnstile.remove(turnstileWidgetId);
+    privateSpaceTurnstile.replaceChildren();
+    turnstileWidgetId = turnstile.render(privateSpaceTurnstile, {
+      sitekey: config.siteKey,
+      theme: root.dataset.theme === 'dark' ? 'dark' : 'light',
+      size: 'flexible',
+      callback: createPrivateSpace,
+      'expired-callback': () => { status.textContent = 'That security check expired. Please complete the new one when you are ready.'; },
+      'error-callback': () => { status.textContent = 'The security check needs another moment. Please try again or come back later.'; createPrivateSpaceButton.disabled = false; },
+    });
+    status.textContent = 'Complete the quick security check when you are ready.';
+  } catch (error) {
+    status.textContent = error.message || 'Private spaces are not available yet. You can still use every support tool without an account.';
+    createPrivateSpaceButton.disabled = false;
+    clearPrivateSpaceCheck();
+  }
+});
+
+cancelPrivateSpaceButton.addEventListener('click', () => {
+  clearPrivateSpaceCheck();
+  createPrivateSpaceButton.disabled = false;
+  document.querySelector('#private-space-status').textContent = 'No problem. Every support tool remains available without a private space.';
 });
 
 deletePrivateSpaceButton.addEventListener('click', async (event) => {
