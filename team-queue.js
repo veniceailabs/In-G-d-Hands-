@@ -5,6 +5,8 @@ const loginStatus = document.querySelector('#owner-login-status');
 const queueStatus = document.querySelector('#queue-status');
 const queueSummary = document.querySelector('#queue-summary');
 const queuePulse = document.querySelector('#queue-pulse');
+const feedbackPulse = document.querySelector('#feedback-pulse');
+const feedbackPulseCards = document.querySelector('#feedback-pulse-cards');
 const queueList = document.querySelector('#queue-list');
 const loadMoreButton = document.querySelector('[data-load-more]');
 let currentFilter = 'all';
@@ -28,6 +30,8 @@ function clearQueueDetails() {
   queueSummary.textContent = '';
   queuePulse.replaceChildren();
   queuePulse.hidden = true;
+  feedbackPulseCards.replaceChildren();
+  feedbackPulse.hidden = true;
   queueStatus.textContent = '';
   loadMoreButton.hidden = true;
   nextOffset = 0;
@@ -66,6 +70,33 @@ function renderQueuePulse(pulse) {
   );
   queuePulse.hidden = false;
 }
+const practiceLabels = {
+  breathe: 'Breathe with the room', ground: 'Come back to your senses', 'brain-dump': 'Let it out of your head', next: 'One small next step', connection: 'Write a warm message', rest: 'A permission slip to pause', movement: 'Make one gentle shift',
+};
+function renderFeedbackPulse(summary) {
+  const feelings = summary?.byFeeling;
+  if (!Number.isSafeInteger(summary?.total) || summary.total < 1 || !feelings || !Number.isSafeInteger(feelings['a little different']) || !Number.isSafeInteger(feelings['I want another option'])) {
+    feedbackPulseCards.replaceChildren(); feedbackPulse.hidden = true; return;
+  }
+  const sharedPractice = practiceLabels[summary.mostSharedPractice] || 'No single practice yet';
+  feedbackPulseCards.replaceChildren(
+    queuePulseItem('Shared', String(summary.total), summary.total === 1 ? 'One optional response' : 'Optional responses'),
+    queuePulseItem('A little different', String(feelings['a little different']), 'After a practice'),
+    queuePulseItem('Another option', String(feelings['I want another option']), 'After a practice'),
+    queuePulseItem('Most shared practice', sharedPractice, 'By aggregate count'),
+  );
+  feedbackPulse.hidden = false;
+}
+
+async function loadFeedbackSummary() {
+  try {
+    const response = await fetch('/api/feedback-summary', { cache: 'no-store' });
+    const result = await response.json().catch(() => ({}));
+    if (response.status === 401) return showLogin('Your private session has ended. Please sign in again.');
+    if (!response.ok) return renderFeedbackPulse(null);
+    renderFeedbackPulse(result);
+  } catch { renderFeedbackPulse(null); }
+}
 
 function renderRequest(item) {
   const card = document.createElement('article'); card.className = 'queue-card';
@@ -103,6 +134,7 @@ async function loadQueue({ append = false } = {}) {
     if (!response.ok || !Array.isArray(result.requests)) throw new Error(result.error || 'Requests are unavailable right now.');
     loadedCount += result.requests.length; nextOffset = result.nextOffset;
     renderQueuePulse(result.pulse);
+    void loadFeedbackSummary();
     const totalLabel = Number.isInteger(result.total) ? `${loadedCount} of ${result.total}` : String(loadedCount);
     queueSummary.textContent = `${totalLabel} ${loadedCount === 1 ? 'request' : 'requests'} loaded · ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
     queueStatus.textContent = '';

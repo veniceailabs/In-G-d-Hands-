@@ -47,6 +47,8 @@ The live Supabase project is limited to three explicitly bounded uses:
 
 Reflections, selected feelings, private writing, Honey transcripts, contacts not submitted to the team, and a browser or device identifier are not stored as part of the product's wellness experience. The browser uses no Supabase service-role credential; that credential stays server-only. Any new category of storage requires an approved data inventory, retention/deletion procedure, consent language, row-level security, and qualified privacy, legal, and clinical review.
 
+The protected owner console receives aggregate feedback counts only. It never receives an individual event, timestamp, message, identity, or browser detail.
+
 ### Optional private spaces
 
 The site supports an optional anonymous Supabase Auth account. It asks for no name, email, phone number, health profile, contacts, or location; it creates only a random technical account identifier and keeps the issued session in browser session storage. The account is not recoverable after browser data is cleared or on another device, and the user can delete the anonymous account from the privacy panel.

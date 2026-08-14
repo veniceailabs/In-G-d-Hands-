@@ -34,6 +34,10 @@
           <div class="owner-actions"><button class="secondary-button" type="button" data-refresh-queue>Refresh</button><button class="text-button" type="button" data-sign-out>Sign out</button></div>
         </div>
         <section class="queue-pulse" id="queue-pulse" aria-label="Current queue overview" hidden></section>
+        <section class="feedback-pulse" id="feedback-pulse" aria-labelledby="feedback-title" hidden>
+          <div class="feedback-pulse-heading"><div><p class="step-label">Optional feedback</p><h3 id="feedback-title">What people chose to share</h3><p>Aggregate counts only. No names, messages, timestamps, or individual responses are shown here.</p></div></div>
+          <div class="feedback-pulse-cards" id="feedback-pulse-cards"></div>
+        </section>
         <div class="queue-filters" role="group" aria-label="Filter requests by status">
           <button type="button" class="is-selected" data-queue-filter="all" aria-pressed="true">All</button>
           <button type="button" data-queue-filter="new" aria-pressed="false">New</button>
