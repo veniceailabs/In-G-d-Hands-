@@ -1,5 +1,5 @@
 function reply(response, status, body) {
-  response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').send(JSON.stringify(body));
+  response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').setHeader('Cache-Control', 'no-store').send(JSON.stringify(body));
 }
 
 export default async function handler(request, response) {
