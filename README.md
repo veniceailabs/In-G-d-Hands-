@@ -52,6 +52,12 @@ Before enabling it in production, enable **Anonymous Sign-Ins** and abuse protec
 
 The first migration, [`supabase/migrations/20260814000000_team_support_requests.sql`](supabase/migrations/20260814000000_team_support_requests.sql), creates the minimal server-only queue for consented requests to speak with the team. It deliberately creates no browser-access policy.
 
+### Private owner support queue
+
+`/team-queue` is an intentionally unlinked owner console for reviewing only the requests a person consented to share. It is not public, does not persist a password in the browser, uses a secure HTTP-only 15-minute session, and supports `new`, `in progress`, and `closed` triage states. Before using it, set a long, unique `SUPPORT_QUEUE_PASSWORD` in Vercel for Production and Preview. Never use the Supabase service-role key as this password or place either value in frontend code.
+
+The console is a private owner tool, not team identity or audit logging. Before giving more people access, replace the shared-password gate with approved staff authentication, role-based access, response-time ownership, and an incident process. The queue does not send notifications or imply that someone is monitoring it continuously.
+
 ## Honey chat configuration
 
 Honey is a server-side API route (`/api/chat`) designed for an OpenAI-compatible provider. To activate it, add these production environment variables in Vercel:
@@ -71,6 +77,17 @@ OLLAMA_MODEL=qwen3.5:4b
 ```
 
 The public Vercel deployment cannot connect directly to Ollama on a private Mac address. Production Ollama therefore needs a dedicated, authenticated HTTPS bridge or a private VPS endpoint; `OLLAMA_BEARER_TOKEN` is supported for that boundary. Do not expose Ollama directly to the public internet.
+
+### Local Ollama production bridge
+
+This repository includes a deliberately narrow local gateway at `scripts/ollama-bridge.mjs`. It listens only on `127.0.0.1`, accepts only authenticated `POST /api/chat` requests, fixes the local model, limits request shape and size, and does not log message content. It is the only local service that should ever sit behind a tunnel; do **not** tunnel Ollama's own port.
+
+1. Generate a private random `OLLAMA_BRIDGE_TOKEN` (at least 32 characters) outside the repository.
+2. Run `OLLAMA_BRIDGE_TOKEN=... npm run ollama:bridge` on the Mac that runs Ollama.
+3. Put a private authenticated HTTPS tunnel in front of `http://127.0.0.1:11435` (for example, Cloudflare Tunnel with Access).
+4. In Vercel, set `AI_PROVIDER=ollama`, `OLLAMA_BASE_URL` to the tunnel's HTTPS URL, `OLLAMA_MODEL=qwen3.5:4b`, and `OLLAMA_BEARER_TOKEN` to the same private token.
+
+The Mac must remain online for Honey to answer. A managed VPS running the same constrained gateway is the more reliable long-term production option.
 
 Honey keeps a short recent conversation only in the current open page so it can respond coherently. The browser does not persist the conversation, and the person can clear it immediately. Do not state that an AI provider never logs data; the in-product disclosure correctly limits the promise to In Göd Hands' own profile and transcript storage.
 

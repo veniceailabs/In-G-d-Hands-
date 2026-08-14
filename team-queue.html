@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Support queue - In Göd Hands</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="owner-console">
+    <main class="owner-main">
+      <a class="brand owner-brand" href="/" aria-label="Return to In Göd Hands">✦ <span>In Göd Hands</span></a>
+      <section class="owner-intro" aria-labelledby="owner-title">
+        <p class="step-label">Private owner console</p>
+        <h1 id="owner-title">Support queue.</h1>
+        <p>Review only the check-in requests people explicitly consented to share. This is not a crisis-response system and does not guarantee a reply time.</p>
+      </section>
+
+      <section class="owner-login" id="owner-login" aria-labelledby="sign-in-title">
+        <h2 id="sign-in-title">Sign in to review requests</h2>
+        <p>Use the private owner password configured in Vercel. It is never stored in this browser.</p>
+        <form id="owner-login-form">
+          <label for="owner-password">Owner password</label>
+          <input id="owner-password" name="password" type="password" autocomplete="current-password" required />
+          <button class="primary-button" type="submit">Sign in <span aria-hidden="true">→</span></button>
+          <p class="form-status" id="owner-login-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="owner-queue" id="owner-queue" hidden aria-labelledby="queue-title">
+        <div class="owner-queue-heading">
+          <div><h2 id="queue-title">Requests</h2><p id="queue-summary" class="owner-summary" role="status" aria-live="polite"></p></div>
+          <div class="owner-actions"><button class="secondary-button" type="button" data-refresh-queue>Refresh</button><button class="text-button" type="button" data-sign-out>Sign out</button></div>
+        </div>
+        <div class="queue-filters" role="group" aria-label="Filter requests by status">
+          <button type="button" class="is-selected" data-queue-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-queue-filter="new" aria-pressed="false">New</button>
+          <button type="button" data-queue-filter="in_progress" aria-pressed="false">In progress</button>
+          <button type="button" data-queue-filter="closed" aria-pressed="false">Closed</button>
+        </div>
+        <p class="form-status" id="queue-status" role="status" aria-live="polite"></p>
+        <div class="queue-list" id="queue-list"></div>
+        <button class="secondary-button queue-more" type="button" data-load-more hidden>Load more requests</button>
+      </section>
+    </main>
+    <script type="module" src="team-queue.js"></script>
+  </body>
+</html>
