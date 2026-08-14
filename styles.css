@@ -147,7 +147,7 @@ input:not([type="checkbox"]) { display: block; width: 100%; border: 1px solid #b
 .practice-dialog { width: min(calc(100% - 2rem), 650px); }
 .practice-lede { max-width: 520px; color: var(--muted); margin: 0 0 1.25rem; }
 .practice-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.2rem; flex-wrap: wrap; }
-.practice-footer .secondary-button { margin: 0; }.practice-reminder { margin-left:auto !important; font-size:.86rem; }
+.practice-footer .secondary-button { margin: 0; }.practice-listen, .practice-reminder { font-size:.86rem; }.practice-listen[aria-pressed="true"] { color:#28736e; }.practice-reminder { margin-left:auto !important; }
 .breathing-practice { display: grid; justify-items: center; gap: 1rem; border-radius: 1.35rem; padding: 1.65rem; background: #eef6f4; color: #264c52; }
 .breathe-orb { width: 10rem; height: 10rem; display: grid; place-items: center; border-radius: 50%; border: 1px solid #78a9ad; background: radial-gradient(circle at 35% 30%, #f8ffff, #cde5e1); box-shadow: inset 0 0 0 1rem rgba(255,255,255,.28); transition: transform 4s ease-in-out; }
 .breathe-orb.is-breathing { animation: guided-breathe 8s ease-in-out infinite; }.breathe-orb strong { color: #1b555e; font-size: 1.9rem; letter-spacing: -.06em; }.breathe-instruction { min-height: 1.5em; margin: 0; font-weight: 750; text-align: center; }.breathe-controls { display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center; }

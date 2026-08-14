@@ -84,6 +84,8 @@ const privateSpaceCheck = document.querySelector('#private-space-check');
 const privateSpaceTurnstile = document.querySelector('#private-space-turnstile');
 const cancelPrivateSpaceButton = document.querySelector('[data-cancel-private-space]');
 let breathingTimer;
+let activePracticeVoice;
+let activePracticeVoiceButton;
 let currentSupportState = 'unsure';
 let currentPractice = 'next';
 let completionFeeling = '';
@@ -176,6 +178,7 @@ function showSupport(state) {
 
 function closePractice() {
   window.clearInterval(breathingTimer);
+  stopPracticeAudio();
   if (practiceDialog.open) practiceDialog.close();
 }
 function completeMoment() {
@@ -188,7 +191,45 @@ function completeMoment() {
   completionDialog.showModal();
 }
 
-function practiceLayout({ eyebrow = 'A quiet practice', title, lede, content }) {
+function stopPracticeAudio() {
+  if (activePracticeVoiceButton) {
+    activePracticeVoiceButton.textContent = 'Listen to this practice';
+    activePracticeVoiceButton.setAttribute('aria-pressed', 'false');
+  }
+  activePracticeVoice = undefined;
+  activePracticeVoiceButton = undefined;
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function addPracticeAudio(text) {
+  if (!text || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+  const listen = document.createElement('button');
+  listen.type = 'button'; listen.className = 'secondary-button practice-listen'; listen.textContent = 'Listen to this practice'; listen.setAttribute('aria-pressed', 'false');
+  listen.addEventListener('click', () => {
+    if (activePracticeVoiceButton === listen) { stopPracticeAudio(); return; }
+    stopPracticeAudio();
+    const voice = new SpeechSynthesisUtterance(text);
+    voice.rate = 0.9;
+    activePracticeVoice = voice;
+    activePracticeVoiceButton = listen;
+    listen.textContent = 'Stop listening';
+    listen.setAttribute('aria-pressed', 'true');
+    const clear = () => {
+      if (activePracticeVoice !== voice) return;
+      activePracticeVoice = undefined;
+      activePracticeVoiceButton = undefined;
+      listen.textContent = 'Listen to this practice';
+      listen.setAttribute('aria-pressed', 'false');
+    };
+    voice.onend = clear;
+    voice.onerror = clear;
+    window.speechSynthesis.speak(voice);
+  });
+  practiceFooter.append(listen);
+}
+
+function practiceLayout({ eyebrow = 'A quiet practice', title, lede, content, audioText = '' }) {
+  stopPracticeAudio();
   practiceEyebrow.textContent = eyebrow;
   practiceTitle.textContent = title;
   practiceLede.textContent = lede;
@@ -203,14 +244,16 @@ function practiceLayout({ eyebrow = 'A quiet practice', title, lede, content }) 
   const reminder = document.createElement('button');
   reminder.type = 'button'; reminder.className = 'secondary-button practice-reminder'; reminder.textContent = 'Set a private reminder';
   reminder.addEventListener('click', openReminder);
-  practiceFooter.append(back, reminder, done);
+  practiceFooter.append(back);
+  addPracticeAudio(audioText);
+  practiceFooter.append(reminder, done);
 }
 
 function createBreathingPractice({ title = 'Breathe with the room', lede = 'Let your breath be natural. This is an invitation, not a test.' } = {}) {
   const wrap = document.createElement('div');
   wrap.className = 'breathing-practice';
   wrap.innerHTML = `<div class="breathe-orb" aria-hidden="true"><strong>1:00</strong></div><p class="breathe-instruction" role="status" aria-live="polite">When you’re ready, begin.</p><div class="breathe-controls"><button class="primary-button" type="button" data-breathe-start>Begin gently</button><button class="secondary-button" type="button" data-breathe-reset>Reset</button></div>`;
-  practiceLayout({ title, lede, content: wrap });
+  practiceLayout({ title, lede, content: wrap, audioText: `${title}. ${lede} When you are ready, let your breath be natural. Breathe in slowly, then let it go slowly. You can pause or stop at any time.` });
   const orb = wrap.querySelector('.breathe-orb'); const time = orb.querySelector('strong'); const message = wrap.querySelector('.breathe-instruction'); const start = wrap.querySelector('[data-breathe-start]');
   let remaining = 60; let running = false;
   const display = () => { time.textContent = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`; };
@@ -236,7 +279,7 @@ function createGroundingPractice() {
     step.addEventListener('click', () => { const done = step.classList.toggle('is-complete'); step.setAttribute('aria-pressed', String(done)); step.querySelector('.grounding-check').textContent = done ? '✓' : ''; });
     wrap.append(step);
   });
-  practiceLayout({ title: 'Come back to your senses', lede: 'Move through these in any order. You do not have to complete every one.', content: wrap });
+  practiceLayout({ title: 'Come back to your senses', lede: 'Move through these in any order. You do not have to complete every one.', content: wrap, audioText: 'Come back to your senses. Move through these in any order. Notice five ordinary things you can see, four things you can feel, three things you can hear, two things you can smell, and one kind thing to tell yourself. You do not have to complete every one.' });
 }
 
 function createBrainDumpPractice() {
@@ -254,13 +297,13 @@ function createBrainDumpPractice() {
     wrap.querySelectorAll('[data-thought-path]').forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
     wrap.querySelector('.copy-status').textContent = choices[button.dataset.thoughtPath];
   }));
-  practiceLayout({ title: 'Let it out of your head', lede: 'You do not need to make this neat. Write what is here, then keep only one small thread.', content: wrap });
+  practiceLayout({ title: 'Let it out of your head', lede: 'You do not need to make this neat. Write what is here, then keep only one small thread.', content: wrap, audioText: 'Let it out of your head. You do not need to make this neat. If writing feels useful, put down what is circling in your mind. Then choose only one small thread to make smaller. Nothing you write is read aloud or sent.' });
 }
 
 function createNextStepPractice() {
   const wrap = document.createElement('div'); wrap.className = 'write-practice';
   wrap.innerHTML = `<label for="next-step-input">What is one kind, possible next step?</label><textarea id="next-step-input" rows="4" maxlength="500" placeholder="For example: drink some water, step outside, send one message, or leave one thing for tomorrow." autocomplete="off" autocorrect="off" spellcheck="false"></textarea><p class="write-note">A small step counts. This stays in the moment and is not saved.</p>`;
-  practiceLayout({ title: 'One small next step', lede: 'Choose something gentle enough that it could really happen - even on a hard day.', content: wrap });
+  practiceLayout({ title: 'One small next step', lede: 'Choose something gentle enough that it could really happen - even on a hard day.', content: wrap, audioText: 'One small next step. Choose something gentle enough that it could really happen, even on a hard day. You might drink water, step outside, send one message, or leave one thing for tomorrow.' });
 }
 
 function createConnectionPractice() {
@@ -270,7 +313,7 @@ function createConnectionPractice() {
     const status = wrap.querySelector('.copy-status'); const value = wrap.querySelector('textarea').value;
     try { await navigator.clipboard.writeText(value); status.textContent = 'Copied. You decide whether and when to send it.'; } catch { status.textContent = 'Select and copy the draft whenever you are ready.'; }
   });
-  practiceLayout({ title: 'Write a warm message', lede: 'Connection can start quietly. This is only a draft - you remain in control.', content: wrap });
+  practiceLayout({ title: 'Write a warm message', lede: 'Connection can start quietly. This is only a draft - you remain in control.', content: wrap, audioText: 'Write a warm message. Connection can start quietly. This is only a draft, and you remain in control of whether you edit it, copy it, send it, or leave it here.' });
 }
 
 function createMovementPractice() {
@@ -287,7 +330,7 @@ function createMovementPractice() {
     wrap.append(step);
   });
   const note = document.createElement('p'); note.className = 'write-note'; note.textContent = 'Skip any prompt that does not feel right for your body. Nothing needs to be completed.'; wrap.append(note);
-  practiceLayout({ title: 'Make one gentle shift', lede: 'This is not exercise. It is simply an invitation to notice or move in a way that feels available.', content: wrap });
+  practiceLayout({ title: 'Make one gentle shift', lede: 'This is not exercise. It is simply an invitation to notice or move in a way that feels available.', content: wrap, audioText: 'Make one gentle shift. This is not exercise. Notice the chair, floor, bed, or anything already holding you. Make one small adjustment if it feels comfortable, or stay still. Your body gets the final say.' });
 }
 
 function localCalendarTime(date) {
