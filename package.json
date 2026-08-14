@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "check": "node --check app.js && node --check team-queue.js && node --check api/chat.js && node --check api/private-account.js && node --check api/private-space-config.js && node --check api/support-request.js && node --check api/team-session.js && node --check api/support-queue.js && node --check api/_team-access.js && node --check scripts/ollama-bridge.mjs",
+    "test": "node --test tests/*.test.mjs",
     "ollama:bridge": "node scripts/ollama-bridge.mjs"
   },
   "engines": {
