@@ -54,3 +54,25 @@ test('clinical requests use the resource response without invoking a model', asy
     globalThis.fetch = originalFetch;
   }
 });
+
+test('an unsafe clinical model reply is replaced with the approved guided fallback', async () => {
+  const envKeys = ['AI_PROVIDER', 'OLLAMA_BASE_URL', 'OLLAMA_MODEL'];
+  const saved = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+  const originalFetch = globalThis.fetch;
+  Object.assign(process.env, { AI_PROVIDER: 'ollama', OLLAMA_BASE_URL: 'https://example.invalid', OLLAMA_MODEL: 'test-model' });
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ message: { content: 'You have anxiety and should start taking medication today.' } }) });
+
+  try {
+    const result = await invoke({ message: 'My thoughts are loud.' }, { 'x-forwarded-for': '203.0.113.23' });
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.responseBody.type, 'support');
+    assert.doesNotMatch(result.responseBody.message, /anxiety|medication/i);
+    assert.match(result.responseBody.message, /one small next step/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of envKeys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  }
+});

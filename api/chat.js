@@ -39,11 +39,12 @@ function normalizeHoneyMessage(value) {
 }
 
 const reassuranceOrOverstatementPattern = /\b(?:you(?:'re| are) (?:going to|gonna|will) (?:be okay|be fine)|everything (?:will|is going to) (?:be okay|be fine|work out)|nobody (?:wants|feels)|everyone (?:feels|knows|goes through)|your future depends|it takes courage|you(?:'re| are) (?:already )?(?:doing|carrying)|matters more than you know|your (?:body|mind|nervous system) (?:is|might be|may be|was)|trying to protect|nothing (?:is|was) wrong with|you deserve)\b/i;
+const clinicalOverreachPattern = /\b(?:you (?:have|are experiencing|might have) (?:anxiety|depression|ptsd|adhd|bipolar|a disorder|a condition)|i (?:diagnose|think you have)|you should (?:take|start taking|stop taking)|(?:take|start taking|stop taking) (?:your )?(?:medication|medicine)|(?:change|increase|decrease) (?:your )?(?:dose|dosage)|i(?:'m| am) (?:a |your )?(?:therapist|counselor|doctor)|self[- ]?harm (?:method|plan|instructions)|suicide (?:method|plan|instructions))\b/i;
 const steadyFallback = 'That sounds like a lot to carry. You do not have to solve all of it right now. If it helps, choose one small next step: take a slow breath, notice what is supporting you, or put a few words on a page.';
 
 function safeHoneyOutput(value, fallback = steadyFallback) {
   const clean = normalizeHoneyMessage(value);
-  return clean && !reassuranceOrOverstatementPattern.test(clean) ? clean : fallback;
+  return clean && !reassuranceOrOverstatementPattern.test(clean) && !clinicalOverreachPattern.test(clean) ? clean : fallback;
 }
 
 function normalizeHistory(value) {
