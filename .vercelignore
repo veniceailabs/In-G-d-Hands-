@@ -1,0 +1,6 @@
+Mental Wellness App.pdf
+Visual Proofs/
+tmp/
+.env
+.env.*
+!.env.example
