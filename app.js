@@ -113,9 +113,12 @@ function updatePrivateSpaceControls() {
 function applyPreferences() {
   const resolvedTheme = preferences.theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : preferences.theme;
   root.dataset.theme = resolvedTheme;
+  root.style.colorScheme = resolvedTheme;
   root.dataset.textScale = preferences.textScale;
   root.dataset.highContrast = String(preferences.contrast);
   root.dataset.reducedMotion = String(preferences.motion);
+  const themeColor = preferences.contrast ? (resolvedTheme === 'dark' ? '#000000' : '#ffffff') : (resolvedTheme === 'dark' ? '#13242d' : '#f5f1ea');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   document.querySelectorAll('[data-theme]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === preferences.theme)));
   document.querySelector('[data-setting="contrast"]').checked = preferences.contrast;
   document.querySelector('[data-setting="motion"]').checked = preferences.motion;
