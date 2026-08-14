@@ -410,7 +410,14 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
   try {
     const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history: chatHistory.slice(-6) }) });
     const result = await response.json(); pending.remove();
-    if (!response.ok) throw new Error(result.error || 'Chat is unavailable.');
+    if (!response.ok) {
+      if (response.status === 429) {
+        const pauseMessage = 'Honey is taking a short pause between messages. You can try again in a moment, choose a gentle support path, or request a check-in with the team.';
+        addMessage(pauseMessage); chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: pauseMessage }); chatHistory = chatHistory.slice(-8);
+        return;
+      }
+      throw new Error(result.error || 'Chat is unavailable.');
+    }
     addMessage(result.message);
     chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: result.message });
     chatHistory = chatHistory.slice(-8);

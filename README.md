@@ -50,6 +50,10 @@ The site supports an optional anonymous Supabase Auth account. It asks for no na
 
 Before enabling it in production, enable **Anonymous Sign-Ins** in Supabase Auth and configure Cloudflare Turnstile. Set `TURNSTILE_SITE_KEY` and the sensitive `TURNSTILE_SECRET_KEY` in Vercel. The widget is loaded only after a person asks to create a private space, and the server validates every token before it asks Supabase to create an anonymous account. The site will safely show a setup message until the requirements are present. Do not claim that no technical information is ever processed: hosting and security services may process limited operational information such as IP address and browser data.
 
+### Honey availability protection
+
+Honey keeps a short, in-memory pace limit for ordinary messages from the same technical connection. It is not a profile, database record, or chat history, and urgent-safety and professional-resource responses bypass it. This protects a small local model from bursts while preserving the immediate safety path.
+
 The first migration, [`supabase/migrations/20260814000000_team_support_requests.sql`](supabase/migrations/20260814000000_team_support_requests.sql), creates the minimal server-only queue for consented requests to speak with the team. It deliberately creates no browser-access policy.
 
 ### Private owner support queue

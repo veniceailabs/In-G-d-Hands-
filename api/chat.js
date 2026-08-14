@@ -1,8 +1,32 @@
 const urgentPattern = /\b(?:kill myself|suicide|end my life|take my life|end it all|ending it|hurt myself|self[- ]?harm|not safe|immediate danger|want to die|(?:can(?:not|'t)|can not)\s+(?:keep|stay)\s+(?:myself\s+)?safe|i\s+(?:do\s+not|don't|cannot|can't|can\s+not)\s+(?:feel|stay|keep)\s+(?:myself\s+)?safe|(?:i(?:'m| am)|feel)\s+unsafe|(?:hurt|harm)\s+(?:myself|someone|another person|them)|(?:take|took)\s+(?:an\s+)?overdose|overdos(?:e|ed|ing))\b/i;
 const clinicalAdvicePattern = /\b(?:diagnos(?:e|ed|is)|do i have|medical advice|should i take (?:a |my )?(?:medication|medicine)|what medication|prescrib(?:e|ed|ing)|symptom(?:s)? of)\b/i;
+const chatWindows = new Map();
+const chatWindowMs = 60_000;
+const maxChatsPerWindow = 12;
 
 function reply(response, status, body) {
   response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').setHeader('Cache-Control', 'no-store').send(JSON.stringify(body));
+}
+
+function chatClientKey(request) {
+  const headers = request.headers || {};
+  return String(headers['x-forwarded-for'] || headers['x-real-ip'] || 'unknown').split(',')[0].trim() || 'unknown';
+}
+
+function ordinaryChatIsRateLimited(request) {
+  const now = Date.now();
+  for (const [key, entries] of chatWindows) {
+    const active = entries.filter((time) => now - time < chatWindowMs);
+    if (active.length) chatWindows.set(key, active);
+    else chatWindows.delete(key);
+  }
+  const key = chatClientKey(request);
+  const entries = chatWindows.get(key) || [];
+  if (!chatWindows.has(key) && chatWindows.size >= 1_000) return true;
+  if (entries.length >= maxChatsPerWindow) return true;
+  entries.push(now);
+  chatWindows.set(key, entries);
+  return false;
 }
 
 function normalizeHoneyMessage(value) {
@@ -53,6 +77,7 @@ export default async function handler(request, response) {
     type: 'professional',
     message: 'I can’t assess symptoms, diagnose, or advise about medication. A licensed health professional can help with those questions. If you would like, I can point you toward additional support resources.',
   });
+  if (ordinaryChatIsRateLimited(request)) return reply(response, 429, { error: 'Honey is taking a short pause between messages. Please try again in a moment.' });
 
   const systemPrompt = 'You are Honey, a warm, concise, non-clinical AI support guide in In Göd Hands. Never diagnose, prescribe treatment, claim to be a therapist, or imply human availability. Respond in no more than 70 words and offer at most one optional, low-risk next step. Do not characterize, praise, or explain the person, their body, mind, effort, history, or feelings. Do not infer causes, say why they feel something, promise outcomes, offer certainty, use therapy language, or say you know what they need or deserve. Avoid phrases such as "it takes courage," "your body is trying to protect you," and "you are already doing the hard work." Do not shame, pressure, or overstate what you know. If a message signals immediate danger, direct the person to urgent support, local emergency help, or a trusted nearby person. Do not provide self-harm instructions.';
   const provider = process.env.AI_PROVIDER || (process.env.OLLAMA_MODEL ? 'ollama' : 'openai-compatible');
