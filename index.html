@@ -132,7 +132,7 @@
       <h2 id="reflection-title">What’s on your mind?</h2>
       <p>There is no need to explain it perfectly. This stays in your browser and is not sent anywhere.</p>
       <label for="reflection-input">Your reflection</label>
-      <textarea id="reflection-input" rows="5" maxlength="500" placeholder="I’ve been feeling..."></textarea>
+      <textarea id="reflection-input" rows="5" maxlength="500" placeholder="I’ve been feeling..." autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
       <div class="dialog-actions">
         <button class="secondary-button" type="button" data-close-dialog>Not now</button>
         <button class="primary-button" type="button" data-reflect>Show me gentle options <span aria-hidden="true">→</span></button>
@@ -270,7 +270,7 @@
         <input id="team-contact" name="contact" maxlength="180" autocomplete="email" inputmode="email" required aria-describedby="team-contact-note" />
         <p class="field-note" id="team-contact-note">We use this only to respond to this request. We do not create a wellness profile from it.</p>
         <label for="team-note">What would feel helpful?</label>
-        <textarea id="team-note" name="note" rows="4" maxlength="1000" required placeholder="A little about what you need from a conversation..."></textarea>
+        <textarea id="team-note" name="note" rows="4" maxlength="1000" required placeholder="A little about what you need from a conversation..." autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
         <label class="consent-row"><input type="checkbox" name="consent" required /> <span>I agree that In Göd Hands may store my contact method and this request so the team can respond. I understand this is not emergency or clinical care.</span></label>
         <div class="dialog-actions">
           <button class="secondary-button" type="button" data-close-dialog>Not now</button>
@@ -302,7 +302,7 @@
       </div>
       <form class="chat-form" id="chat-form">
         <label class="sr-only" for="chat-input">Message Honey</label>
-        <textarea id="chat-input" rows="1" maxlength="800" placeholder="Write a message..." required></textarea>
+        <textarea id="chat-input" rows="1" maxlength="800" placeholder="Write a message..." required autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
         <button class="send-button" type="submit" aria-label="Send message" data-send-chat>↑</button>
       </form>
       <button class="team-link" type="button" data-open-team>Rather speak with the team? Request a check-in <span aria-hidden="true">→</span></button>
