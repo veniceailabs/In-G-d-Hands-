@@ -84,10 +84,10 @@ This repository includes a deliberately narrow local gateway at `scripts/ollama-
 
 1. Generate a private random `OLLAMA_BRIDGE_TOKEN` (at least 32 characters) outside the repository.
 2. Run `OLLAMA_BRIDGE_TOKEN=... npm run ollama:bridge` on the Mac that runs Ollama.
-3. Put a private authenticated HTTPS tunnel in front of `http://127.0.0.1:11435` (for example, Cloudflare Tunnel with Access).
+3. Put an authenticated HTTPS route in front of `http://127.0.0.1:11435` (for example, a Tailscale Funnel or Cloudflare Tunnel). The gateway's bearer token remains required even behind that route.
 4. In Vercel, set `AI_PROVIDER=ollama`, `OLLAMA_BASE_URL` to the tunnel's HTTPS URL, `OLLAMA_MODEL=qwen3.5:4b`, and `OLLAMA_BEARER_TOKEN` to the same private token.
 
-The Mac must remain online for Honey to answer. A managed VPS running the same constrained gateway is the more reliable long-term production option.
+The Mac must remain online for Honey to answer. The bridge handles only one model request at a time and returns quickly when it is busy or the local model takes too long; the Vercel route then gives the person a safe guided alternative. A managed VPS running the same constrained gateway is the more reliable long-term production option.
 
 Honey keeps a short recent conversation only in the current open page so it can respond coherently. The browser does not persist the conversation, and the person can clear it immediately. Do not state that an AI provider never logs data; the in-product disclosure correctly limits the promise to In Göd Hands' own profile and transcript storage.
 

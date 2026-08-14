@@ -2,7 +2,7 @@ const urgentPattern = /\b(?:kill myself|suicide|end my life|take my life|end it 
 const clinicalAdvicePattern = /\b(?:diagnos(?:e|ed|is)|do i have|medical advice|should i take (?:a |my )?(?:medication|medicine)|what medication|prescrib(?:e|ed|ing)|symptom(?:s)? of)\b/i;
 
 function reply(response, status, body) {
-  response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').send(JSON.stringify(body));
+  response.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').setHeader('Cache-Control', 'no-store').send(JSON.stringify(body));
 }
 
 function normalizeHoneyMessage(value) {
@@ -63,8 +63,8 @@ export default async function handler(request, response) {
       const headers = { 'Content-Type': 'application/json' };
       if (process.env.OLLAMA_BEARER_TOKEN) headers.Authorization = `Bearer ${process.env.OLLAMA_BEARER_TOKEN}`;
       const ollamaResponse = await fetch(`${baseUrl.replace(/\/$/, '')}/api/chat`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ model, stream: false, think: false, options: { temperature: 0.55, num_predict: 180 }, messages: [
+        method: 'POST', headers, signal: AbortSignal.timeout(18_000),
+        body: JSON.stringify({ model, stream: false, think: false, options: { temperature: 0.45, num_predict: 100 }, messages: [
           { role: 'system', content: systemPrompt }, ...history,
           { role: 'user', content: message },
         ] }),
@@ -78,7 +78,7 @@ export default async function handler(request, response) {
     const { AI_BASE_URL, AI_API_KEY, AI_MODEL } = process.env;
     if (!AI_BASE_URL || !AI_API_KEY || !AI_MODEL) return reply(response, 200, { type: 'support', mode: 'guided', message: guidedHoneyReply(message) });
     const providerResponse = await fetch(`${AI_BASE_URL.replace(/\/$/, '')}/chat/completions`, {
-      method: 'POST',
+      method: 'POST', signal: AbortSignal.timeout(18_000),
       headers: { Authorization: `Bearer ${AI_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: AI_MODEL, temperature: 0.55, max_tokens: 180, messages: [
         { role: 'system', content: systemPrompt }, ...history,

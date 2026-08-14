@@ -370,6 +370,7 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
   event.preventDefault(); const text = chatInput.value.trim(); if (!text || honeyIsResponding) return;
   honeyIsResponding = true; sendChatButton.disabled = true;
   addMessage(text, 'user'); chatInput.value = ''; const pending = addMessage('Honey is thinking…', 'loading');
+  const gentleWait = window.setTimeout(() => { if (pending.isConnected) pending.textContent = 'Honey is taking a little longer. A gentle next step is on its way…'; }, 7000);
   try {
     const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history: chatHistory.slice(-6) }) });
     const result = await response.json(); pending.remove();
@@ -380,7 +381,7 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
     if (result.type === 'urgent') urgentDialog.showModal();
     if (result.type === 'professional') addProfessionalResourceAction();
   } catch { pending.remove(); const fallback = 'Honey’s live chat connection is not available just yet. You can still choose a gentle support path here or request a check-in with the team.'; addMessage(fallback); chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: fallback }); chatHistory = chatHistory.slice(-8); }
-  finally { honeyIsResponding = false; sendChatButton.disabled = false; }
+  finally { window.clearTimeout(gentleWait); honeyIsResponding = false; sendChatButton.disabled = false; }
 });
 
 teamSupportForm.addEventListener('submit', async (event) => {

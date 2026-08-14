@@ -6,6 +6,8 @@ const token = process.env.OLLAMA_BRIDGE_TOKEN || '';
 const model = process.env.OLLAMA_MODEL || 'qwen3.5:4b';
 const ollamaBaseUrl = new URL(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434');
 const localHosts = new Set(['127.0.0.1', 'localhost', '::1']);
+const maxActiveRequests = 1;
+let activeRequests = 0;
 
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('OLLAMA_BRIDGE_PORT must be a valid non-privileged port.');
 if (token.length < 32) throw new Error('OLLAMA_BRIDGE_TOKEN must be a private random value of at least 32 characters.');
@@ -51,13 +53,16 @@ function messagesAreAllowed(messages) {
 const server = createServer(async (request, response) => {
   if (request.method !== 'POST' || request.url !== '/api/chat') return send(response, 404, { error: 'Not found.' });
   if (!hasValidToken(request.headers.authorization)) return send(response, 401, { error: 'Unauthorized.' });
+  if (activeRequests >= maxActiveRequests) return send(response, 429, { error: 'Honey is helping someone else right now. Please try again in a moment.' });
 
+  activeRequests += 1;
   try {
     const input = await readJson(request);
     if (!messagesAreAllowed(input?.messages)) return send(response, 400, { error: 'A valid Honey chat request is required.' });
     const upstream = await fetch(new URL('/api/chat', ollamaBaseUrl), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(16_000),
       body: JSON.stringify({
         model,
         stream: false,
@@ -72,6 +77,8 @@ const server = createServer(async (request, response) => {
     return send(response, 200, { message: { content: payload.message.content } });
   } catch {
     return send(response, 502, { error: 'Local Honey service is unavailable.' });
+  } finally {
+    activeRequests -= 1;
   }
 });
 
