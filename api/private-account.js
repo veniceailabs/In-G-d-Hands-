@@ -3,15 +3,34 @@ function reply(response, status, body) {
 }
 
 export default async function handler(request, response) {
-  if (request.method !== 'POST') return reply(response, 405, { error: 'Method not allowed.' });
+  if (!['POST', 'DELETE'].includes(request.method)) return reply(response, 405, { error: 'Method not allowed.' });
 
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return reply(response, 503, { error: 'Private spaces are being prepared. You can still use every support tool without an account.' });
   }
 
+  const authUrl = `${SUPABASE_URL.replace(/\/$/, '')}/auth/v1`;
+
   try {
-    const account = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/auth/v1/signup`, {
+    if (request.method === 'DELETE') {
+      const accessToken = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+      if (!accessToken) return reply(response, 401, { error: 'Your private-space session is missing. Open this space in the same browser session to delete it.' });
+      const userResponse = await fetch(`${authUrl}/user`, {
+        headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${accessToken}` },
+      });
+      const user = await userResponse.json().catch(() => ({}));
+      if (!userResponse.ok || !user.id || user.is_anonymous !== true) return reply(response, 403, { error: 'This private-space session cannot be deleted here.' });
+      const deletion = await fetch(`${authUrl}/admin/users/${encodeURIComponent(user.id)}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ should_soft_delete: false }),
+      });
+      if (!deletion.ok) return reply(response, 502, { error: 'We could not delete your private space. Please try again.' });
+      return reply(response, 200, { deleted: true });
+    }
+
+    const account = await fetch(`${authUrl}/signup`, {
       method: 'POST',
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,

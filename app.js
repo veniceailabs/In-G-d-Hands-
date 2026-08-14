@@ -60,6 +60,10 @@ const completion = document.querySelector('#completion');
 const chatDrawer = document.querySelector('#chat-drawer');
 const chatMessages = document.querySelector('#chat-messages');
 const chatInput = document.querySelector('#chat-input');
+const createPrivateSpaceButton = document.querySelector('[data-create-private-space]');
+const deletePrivateSpaceButton = document.querySelector('[data-delete-private-space]');
+const confirmDeleteSpace = document.querySelector('[data-confirm-delete-space]');
+const deleteSpaceConfirmRow = document.querySelector('.delete-space-confirm');
 let breathingTimer;
 let currentSupportState = 'unsure';
 
@@ -68,6 +72,20 @@ function readPreferences() {
 }
 function savePreferences(next) { localStorage.setItem('igh-preferences', JSON.stringify(next)); }
 let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, ...readPreferences() };
+
+function readPrivateSpace() {
+  try { return JSON.parse(sessionStorage.getItem('igh-private-space') || 'null'); } catch { return null; }
+}
+function removePrivateSpace() {
+  try { sessionStorage.removeItem('igh-private-space'); } catch { /* The user still receives the server-side deletion result. */ }
+}
+function updatePrivateSpaceControls() {
+  const active = Boolean(readPrivateSpace()?.access_token);
+  createPrivateSpaceButton.hidden = active;
+  deletePrivateSpaceButton.hidden = !active;
+  deleteSpaceConfirmRow.hidden = !active;
+  if (!active) confirmDeleteSpace.checked = false;
+}
 
 function applyPreferences() {
   const resolvedTheme = preferences.theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : preferences.theme;
@@ -81,6 +99,7 @@ function applyPreferences() {
   document.querySelector('#text-size-status').textContent = preferences.textScale === 'default' ? 'Default' : preferences.textScale === 'large' ? 'Large' : 'Largest';
 }
 applyPreferences();
+updatePrivateSpaceControls();
 
 function showSupport(state) {
   currentSupportState = state;
@@ -207,7 +226,7 @@ document.querySelector('[data-reflect]').addEventListener('click', () => { const
 practiceDialog.addEventListener('close', () => window.clearInterval(breathingTimer));
 
 document.querySelector('[data-open-accessibility]').addEventListener('click', () => accessibilityDialog.showModal());
-document.querySelector('[data-open-privacy]').addEventListener('click', () => privacyDialog.showModal());
+document.querySelector('[data-open-privacy]').addEventListener('click', () => { updatePrivateSpaceControls(); privacyDialog.showModal(); });
 document.querySelectorAll('[data-theme]').forEach((button) => button.addEventListener('click', () => { preferences.theme = button.dataset.theme; savePreferences(preferences); applyPreferences(); }));
 document.querySelectorAll('[data-text-size]').forEach((button) => button.addEventListener('click', () => {
   const scales = ['default', 'large', 'larger']; let index = scales.indexOf(preferences.textScale);
@@ -246,12 +265,10 @@ document.querySelector('#team-support-form').addEventListener('submit', async (e
   finally { submit.disabled = false; }
 });
 
-document.querySelector('[data-create-private-space]').addEventListener('click', async (event) => {
+createPrivateSpaceButton.addEventListener('click', async (event) => {
   const button = event.currentTarget;
   const status = document.querySelector('#private-space-status');
-  let activeSpace;
-  try { activeSpace = sessionStorage.getItem('igh-private-space'); } catch { activeSpace = null; }
-  if (activeSpace) {
+  if (readPrivateSpace()?.access_token) {
     status.textContent = 'Your private space is already ready in this browser session.';
     return;
   }
@@ -261,10 +278,28 @@ document.querySelector('[data-create-private-space]').addEventListener('click', 
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.session?.access_token) throw new Error(result.error || 'Private spaces are not available yet.');
     try { sessionStorage.setItem('igh-private-space', JSON.stringify(result.session)); } catch { throw new Error('Your browser is blocking the private-space session. You can still use every support tool without an account.'); }
-    button.textContent = 'Private space ready';
+    updatePrivateSpaceControls();
     status.textContent = 'Your private space is ready for this browser session. No name, email, phone number, or wellness profile was requested.';
   } catch (error) {
     status.textContent = error.message || 'Private spaces are not available yet. You can still use every support tool without an account.';
     button.disabled = false;
   }
+});
+
+deletePrivateSpaceButton.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  const status = document.querySelector('#private-space-status');
+  const space = readPrivateSpace();
+  if (!confirmDeleteSpace.checked) { status.textContent = 'Please confirm that you understand deletion cannot be undone.'; return; }
+  if (!space?.access_token) { updatePrivateSpaceControls(); status.textContent = 'There is no private space in this browser session.'; return; }
+  button.disabled = true; status.textContent = 'Deleting your private space…';
+  try {
+    const response = await fetch('/api/private-account', { method: 'DELETE', headers: { Authorization: `Bearer ${space.access_token}` } });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'We could not delete your private space.');
+    removePrivateSpace(); updatePrivateSpaceControls();
+    status.textContent = 'Your private space has been deleted. The support tools remain available without an account.';
+  } catch (error) {
+    status.textContent = error.message || 'We could not delete your private space. Please try again.';
+  } finally { button.disabled = false; }
 });

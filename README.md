@@ -43,7 +43,7 @@ The browser must use only the Supabase project URL and publishable/anon key. Kee
 
 ### Optional private spaces
 
-The site supports an optional anonymous Supabase Auth account. It asks for no name, email, phone number, health profile, contacts, or location; it creates only a random technical account identifier and keeps the issued session in browser session storage. The account is not recoverable after browser data is cleared or on another device.
+The site supports an optional anonymous Supabase Auth account. It asks for no name, email, phone number, health profile, contacts, or location; it creates only a random technical account identifier and keeps the issued session in browser session storage. The account is not recoverable after browser data is cleared or on another device, and the user can delete the anonymous account from the privacy panel.
 
 Before enabling it in production, enable **Anonymous Sign-Ins** and abuse protection in Supabase Auth. Anonymous user creation has an IP-based rate limit, and Supabase recommends CAPTCHA or Turnstile as well. The site will safely show a setup message until the Auth setting is enabled. Do not claim that no technical information is ever processed: hosting and security services may process limited operational information such as IP address and browser data.
 
