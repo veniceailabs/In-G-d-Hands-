@@ -13,6 +13,14 @@ function normalizeHoneyMessage(value) {
   return sentenceEnd > 70 ? shortened.slice(0, sentenceEnd + 1) : `${shortened}…`;
 }
 
+const reassuranceOrOverstatementPattern = /\b(?:you(?:'re| are) (?:going to|gonna|will) (?:be okay|be fine)|everything (?:will|is going to) (?:be okay|be fine|work out)|nobody (?:wants|feels)|everyone (?:feels|knows|goes through)|your future depends)\b/i;
+const steadyFallback = 'That sounds like a lot to carry before an important conversation. You do not have to solve the whole meeting right now. If it feels useful, write down one sentence you want to communicate, then let that be enough for this moment.';
+
+function safeHoneyOutput(value) {
+  const clean = normalizeHoneyMessage(value);
+  return clean && !reassuranceOrOverstatementPattern.test(clean) ? clean : steadyFallback;
+}
+
 function normalizeHistory(value) {
   if (!Array.isArray(value)) return [];
   return value.slice(-6).flatMap((entry) => {
@@ -32,7 +40,7 @@ export default async function handler(request, response) {
     message: 'I’m really glad you told me. Your immediate safety matters more than this chat. Please use the urgent-support option now to contact local emergency help or a trusted person nearby.',
   });
 
-  const systemPrompt = 'You are Honey, a warm, concise, non-clinical support guide in In Göd Hands. Never diagnose, prescribe treatment, claim to be a therapist, or imply human availability. Offer validation and one small, low-risk next step. If a message signals immediate danger, tell the person to use urgent support and contact local emergency help or a trusted nearby person. Do not provide self-harm instructions. Keep responses under 110 words.';
+  const systemPrompt = 'You are Honey, a warm, concise, non-clinical AI support guide in In Göd Hands. Never diagnose, prescribe treatment, claim to be a therapist, or imply human availability. Offer gentle validation and at most one small, low-risk next step. Do not predict outcomes, give certainty-based reassurance, say that someone will be okay, or treat a feeling as universal. Do not shame, pressure, or overstate what you know. If a message signals immediate danger, direct the person to urgent support, local emergency help, or a trusted nearby person. Do not provide self-harm instructions. Keep responses under 110 words.';
   const provider = process.env.AI_PROVIDER || (process.env.OLLAMA_MODEL ? 'ollama' : 'openai-compatible');
   try {
     if (provider === 'ollama') {
@@ -49,8 +57,7 @@ export default async function handler(request, response) {
       });
       if (!ollamaResponse.ok) throw new Error(`Ollama returned ${ollamaResponse.status}`);
       const ollamaPayload = await ollamaResponse.json();
-      const ollamaOutput = normalizeHoneyMessage(ollamaPayload?.message?.content);
-      if (!ollamaOutput) throw new Error('Ollama returned no message.');
+      const ollamaOutput = safeHoneyOutput(ollamaPayload?.message?.content);
       return reply(response, 200, { type: 'support', message: ollamaOutput });
     }
 
@@ -65,8 +72,7 @@ export default async function handler(request, response) {
       ] }),
     });
     if (!providerResponse.ok) throw new Error(`Provider returned ${providerResponse.status}`);
-    const payload = await providerResponse.json(); const output = normalizeHoneyMessage(payload?.choices?.[0]?.message?.content);
-    if (!output) throw new Error('Provider returned no message.');
+    const payload = await providerResponse.json(); const output = safeHoneyOutput(payload?.choices?.[0]?.message?.content);
     return reply(response, 200, { type: 'support', message: output });
   } catch { return reply(response, 502, { error: 'Honey could not reach the support service.' }); }
 }
