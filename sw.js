@@ -1,5 +1,5 @@
-const CACHE_NAME = 'in-god-hands-shell-v1';
-const APP_SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/favicon.svg', '/app-icon.svg', '/manifest.webmanifest'];
+const CACHE_NAME = 'in-god-hands-shell-v2';
+const APP_SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/favicon.svg', '/app-icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-180.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
