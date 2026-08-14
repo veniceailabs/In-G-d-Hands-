@@ -17,6 +17,8 @@ The first interactive surface is intentionally local-only:
 
 It is not therapy, diagnosis, treatment, or an emergency service.
 
+For the precise boundary between the live private MVP and the human governance required before a wider launch, read [MVP readiness](MVP_READINESS.md).
+
 The resource layer intentionally links to the independently maintained [Find A Helpline](https://findahelpline.com/) directory rather than guessing a visitor's country or emergency number. It opens separately and does not require an In Göd Hands account.
 
 ## Run locally
