@@ -28,9 +28,9 @@ Then visit `http://127.0.0.1:4474`.
 
 ## Vercel
 
-This folder can be imported as a static Vercel project without a build command. `vercel.json` adds a small baseline of browser security headers. Deployment is intentionally not initiated from this workspace.
+This folder deploys as a static Vercel project without a build command. `vercel.json` adds a small baseline of browser security headers, and the connected GitHub `main` branch supplies production deployments.
 
-## Supabase - planned integration boundary
+## Supabase - privacy-first integration boundary
 
 Do not connect Supabase until the product has an approved data inventory, retention schedule, and consent wording. The initial safe storage scope should be limited to the user's explicit choices:
 
@@ -40,6 +40,12 @@ Do not connect Supabase until the product has an approved data inventory, retent
 4. user-controlled export and deletion.
 
 The browser must use only the Supabase project URL and publishable/anon key. Keep service-role credentials server-only. Before any live storage is enabled, define row-level security, account deletion, retention, support-resource jurisdiction, and the crisis escalation experience with qualified privacy, legal, and clinical advisors.
+
+### Optional private spaces
+
+The site supports an optional anonymous Supabase Auth account. It asks for no name, email, phone number, health profile, contacts, or location; it creates only a random technical account identifier and keeps the issued session in browser session storage. The account is not recoverable after browser data is cleared or on another device.
+
+Before enabling it in production, enable **Anonymous Sign-Ins** and abuse protection in Supabase Auth. Anonymous user creation has an IP-based rate limit, and Supabase recommends CAPTCHA or Turnstile as well. The site will safely show a setup message until the Auth setting is enabled. Do not claim that no technical information is ever processed: hosting and security services may process limited operational information such as IP address and browser data.
 
 The first migration, [`supabase/migrations/20260814000000_team_support_requests.sql`](supabase/migrations/20260814000000_team_support_requests.sql), creates the minimal server-only queue for consented requests to speak with the team. It deliberately creates no browser-access policy.
 

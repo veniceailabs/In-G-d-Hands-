@@ -71,11 +71,42 @@
         <button class="text-button" type="button" data-open-reflection>Or, put a few words to it <span aria-hidden="true">→</span></button>
       </section>
 
+      <section class="quiet-tools" aria-labelledby="quiet-tools-title">
+        <div class="quiet-tools-heading">
+          <p class="step-label">A little room to breathe</p>
+          <h2 id="quiet-tools-title">Start with what feels possible.</h2>
+          <p>These small practices work privately in this browser. Nothing is saved or sent from them.</p>
+        </div>
+        <div class="tool-grid">
+          <button class="tool-card tool-card-breathe" type="button" data-practice="breathe">
+            <span class="tool-art breathe-art" aria-hidden="true"><i></i></span>
+            <span class="tool-time">1 minute</span>
+            <span class="tool-title">Breathe with the room</span>
+            <span class="tool-copy">A paced, gentle reset with no pressure to get it right.</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="tool-card tool-card-ground" type="button" data-practice="ground">
+            <span class="tool-art ground-art" aria-hidden="true">✦</span>
+            <span class="tool-time">2 minutes</span>
+            <span class="tool-title">Come back to your senses</span>
+            <span class="tool-copy">A simple noticing practice for when thoughts are moving fast.</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="tool-card tool-card-write" type="button" data-practice="brain-dump">
+            <span class="tool-art write-art" aria-hidden="true">⌁</span>
+            <span class="tool-time">As long as you need</span>
+            <span class="tool-title">Let it out of your head</span>
+            <span class="tool-copy">Write freely, then choose one thing that deserves your care.</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
       <section class="promise" aria-label="Our promise">
         <div class="promise-star" aria-hidden="true">✦</div>
         <div>
           <p class="step-label">Our promise</p>
-          <p>This is a non-clinical space for reflection and support. You are always in control of what you share, and you can leave any path at any time.</p>
+          <p>This is a non-clinical space for reflection and support. You are always in control of what you share, and you can leave any path at any time. <button class="inline-button" type="button" data-open-privacy>How privacy works</button></p>
         </div>
       </section>
     </main>
@@ -115,6 +146,15 @@
       <p class="urgent-note">Crisis and emergency resources vary by location. A public launch needs reviewed, local support pathways before this action is made available.</p>
     </dialog>
 
+    <dialog class="practice-dialog" id="practice-dialog" aria-labelledby="practice-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
+      <p class="step-label" id="practice-eyebrow">A quiet practice</p>
+      <h2 id="practice-title">A moment for you.</h2>
+      <p class="practice-lede" id="practice-lede"></p>
+      <div id="practice-content"></div>
+      <div class="practice-footer" id="practice-footer"></div>
+    </dialog>
+
     <dialog class="accessibility-dialog" id="accessibility-dialog" aria-labelledby="accessibility-title">
       <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
       <p class="step-label">Make this space yours</p>
@@ -138,6 +178,36 @@
       </div>
       <label class="toggle-row"><span><span class="settings-label">Higher contrast</span><span class="settings-help">Make boundaries and text more distinct.</span></span><input type="checkbox" data-setting="contrast" /></label>
       <label class="toggle-row"><span><span class="settings-label">Reduce motion</span><span class="settings-help">Minimize movement and animation.</span></span><input type="checkbox" data-setting="motion" /></label>
+    </dialog>
+
+    <dialog class="privacy-dialog" id="privacy-dialog" aria-labelledby="privacy-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
+      <p class="step-label">Privacy, in plain language</p>
+      <h2 id="privacy-title">Your space stays yours.</h2>
+      <p class="privacy-intro">You do not need an account to use In Göd Hands. We do not ask for your name, email, phone number, health profile, contacts, or location to use the check-in, practices, or Honey.</p>
+      <div class="privacy-points">
+        <section>
+          <h3>By default</h3>
+          <p>Your selected feeling, reflection writing, practice progress, and Honey messages are not saved to an In Göd Hands profile or chat history.</p>
+        </section>
+        <section>
+          <h3>Only when you ask the team</h3>
+          <p>We store only the contact details and note you choose to send, so the team can respond. The form makes this clear before anything is submitted.</p>
+        </section>
+        <section>
+          <h3>About a private space</h3>
+          <p>It is optional. It creates a random technical account ID without asking for personal information. It is tied to this browser session and cannot be recovered after you clear browser data or change devices.</p>
+        </section>
+      </div>
+      <details class="privacy-details">
+        <summary>What technical information is involved?</summary>
+        <p>Like nearly every website, our hosting, security, and database services may process limited technical information such as an IP address and browser data to run the service and prevent abuse. We do not use this to build a wellness profile or sell your information.</p>
+      </details>
+      <div class="private-space-action">
+        <div><h3>Create an optional private space</h3><p>Today, it simply gives you a private, no-personal-info identity for features you explicitly choose to save in the future. All current practices remain unsaved by default.</p></div>
+        <button class="primary-button" type="button" data-create-private-space>Create private space <span aria-hidden="true">→</span></button>
+      </div>
+      <p class="form-status" id="private-space-status" role="status" aria-live="polite"></p>
     </dialog>
 
     <dialog class="team-dialog" id="team-dialog" aria-labelledby="team-title">
@@ -172,7 +242,7 @@
         <div><p class="step-label">Gentle chat support</p><h2 id="chat-title">Honey is here.</h2></div>
         <button class="dialog-close" type="button" aria-label="Close chat" data-close-chat>×</button>
       </header>
-      <p class="chat-disclosure">Honey is an automated, non-clinical support guide - not a therapist or emergency service.</p>
+      <p class="chat-disclosure">Honey is an automated, non-clinical support guide - not a therapist or emergency service. Share only what feels okay.</p>
       <div class="chat-messages" id="chat-messages" aria-live="polite">
         <article class="message assistant">Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?</article>
       </div>

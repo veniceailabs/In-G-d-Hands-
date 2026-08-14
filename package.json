@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "check": "node --check app.js && node --check api/chat.js && node --check api/support-request.js"
+    "check": "node --check app.js && node --check api/chat.js && node --check api/support-request.js && node --check api/private-account.js"
   },
   "engines": {
     "node": ">=20"
