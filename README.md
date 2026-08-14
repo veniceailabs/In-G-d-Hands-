@@ -54,6 +54,10 @@ Before enabling it in production, enable **Anonymous Sign-Ins** in Supabase Auth
 
 Honey keeps a short, in-memory pace limit for ordinary messages from the same technical connection. It is not a profile, database record, or chat history, and urgent-safety and professional-resource responses bypass it. This protects a small local model from bursts while preserving the immediate safety path.
 
+### Installable, private offline shell
+
+The public app is installable from supported browsers. Its shell and self-guided practices can open during a temporary connection loss; Honey, private-space creation/deletion, Turnstile, team check-ins, and external resources remain online-only. The app does not queue messages, contact details, or private writing for later transmission.
+
 The first migration, [`supabase/migrations/20260814000000_team_support_requests.sql`](supabase/migrations/20260814000000_team_support_requests.sql), creates the minimal server-only queue for consented requests to speak with the team. It deliberately creates no browser-access policy.
 
 ### Private owner support queue

@@ -63,6 +63,8 @@ button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 3px sol
 .ambient { position: fixed; border-radius: 999px; filter: blur(2px); opacity: .56; pointer-events: none; }
 .ambient-one { width: 38rem; height: 38rem; background: #e9bf91; top: -22rem; right: -14rem; }
 .ambient-two { width: 32rem; height: 32rem; background: #b9d9d4; left: -24rem; bottom: -18rem; }
+.connection-notice { position:fixed; z-index:30; top:5.7rem; left:50%; width:min(calc(100% - 2rem), 640px); transform:translateX(-50%); border:1px solid #8e6153; border-radius:1rem; padding:.72rem .9rem; background:#fff5df; color:#634737; box-shadow:0 10px 28px rgba(43,51,62,.18); font-size:.84rem; text-align:center; }
+html[data-theme="dark"] .connection-notice { background:#473b2b; border-color:#c69868; color:#fff1d4; }
 .site-header { max-width: 1240px; margin: 0 auto; padding: 2.1rem 2.5rem; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
 .brand { color: var(--deep); display: inline-flex; align-items: center; gap: .55rem; text-decoration: none; font-weight: 750; letter-spacing: -.04em; font-size: 1.14rem; }
 .brand-mark { color: var(--coral); font-size: 1.45rem; }

@@ -42,6 +42,7 @@ const supportPaths = {
 };
 
 const root = document.documentElement;
+const connectionNotice = document.querySelector('#connection-notice');
 const supportDialog = document.querySelector('#support-dialog');
 const reflectionDialog = document.querySelector('#reflection-dialog');
 const urgentDialog = document.querySelector('#urgent-dialog');
@@ -141,6 +142,16 @@ function applyPreferences() {
 }
 applyPreferences();
 updatePrivateSpaceControls();
+
+function updateConnectionNotice() {
+  connectionNotice.hidden = navigator.onLine;
+}
+window.addEventListener('online', updateConnectionNotice);
+window.addEventListener('offline', updateConnectionNotice);
+updateConnectionNotice();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); }, { once: true });
+}
 
 function showSupport(state) {
   currentSupportState = state;
