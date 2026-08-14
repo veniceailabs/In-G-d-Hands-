@@ -161,7 +161,8 @@ function closePractice() {
   if (practiceDialog.open) practiceDialog.close();
 }
 function completeMoment() {
-  closePractice(); supportDialog.close();
+  closePractice();
+  if (supportDialog.open) supportDialog.close();
   completionChoices.forEach((button) => button.setAttribute('aria-pressed', 'false'));
   completionStatus.textContent = '';
   completionDialog.showModal();
@@ -282,7 +283,7 @@ function openReminder() {
 }
 
 function openPractice(id) {
-  supportDialog.close();
+  if (supportDialog.open) supportDialog.close();
   if (id === 'breathe') createBreathingPractice();
   else if (id === 'ground') createGroundingPractice();
   else if (id === 'brain-dump') createBrainDumpPractice();
