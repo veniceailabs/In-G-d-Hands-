@@ -53,6 +53,7 @@ const teamDialog = document.querySelector('#team-dialog');
 const teamSupportForm = document.querySelector('#team-support-form');
 const teamSupportStatus = document.querySelector('#team-form-status');
 const teamSupportSubmit = document.querySelector('[data-team-submit]');
+const withdrawTeamRequestButton = document.querySelector('[data-withdraw-team-request]');
 const supportReflection = document.querySelector('#support-reflection');
 const supportOptions = document.querySelector('#support-options');
 const practiceEyebrow = document.querySelector('#practice-eyebrow');
@@ -74,6 +75,7 @@ let currentSupportState = 'unsure';
 let chatHistory = [];
 let honeyIsResponding = false;
 let teamSupportAvailable = false;
+let teamRequestCreationLocked = false;
 const honeyGreeting = 'Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?';
 
 function readPreferences() {
@@ -87,6 +89,12 @@ function readPrivateSpace() {
 }
 function removePrivateSpace() {
   try { sessionStorage.removeItem('igh-private-space'); } catch { /* The user still receives the server-side deletion result. */ }
+}
+function readTeamRequest() {
+  try { return JSON.parse(sessionStorage.getItem('igh-team-request') || 'null'); } catch { return null; }
+}
+function removeTeamRequest() {
+  try { sessionStorage.removeItem('igh-team-request'); } catch { /* The request remains protected by its server-side token. */ }
 }
 function updatePrivateSpaceControls() {
   const active = Boolean(readPrivateSpace()?.access_token);
@@ -231,8 +239,10 @@ function openChat() {
   chatInput.focus();
 }
 function setTeamSupportEnabled(enabled) {
-  teamSupportForm.querySelectorAll('input, textarea').forEach((field) => { field.disabled = !enabled; });
-  teamSupportSubmit.disabled = !enabled;
+  const hasPendingRequest = Boolean(readTeamRequest()?.id && readTeamRequest()?.token);
+  teamSupportForm.querySelectorAll('input, textarea').forEach((field) => { field.disabled = !enabled || hasPendingRequest || teamRequestCreationLocked; });
+  teamSupportSubmit.disabled = !enabled || hasPendingRequest || teamRequestCreationLocked;
+  withdrawTeamRequestButton.hidden = !hasPendingRequest;
 }
 async function openTeamSupport() {
   teamSupportAvailable = false;
@@ -246,7 +256,7 @@ async function openTeamSupport() {
   } catch { teamSupportAvailable = false; }
   if (teamSupportAvailable) {
     setTeamSupportEnabled(true);
-    teamSupportStatus.textContent = 'The request form is available. Share only what feels right; a response time is not promised.';
+    teamSupportStatus.textContent = readTeamRequest() ? 'You have a request in this browser session. You can withdraw it below; a response time is not promised.' : 'The request form is available. Share only what feels right; a response time is not promised.';
   } else {
     teamSupportStatus.textContent = 'Team check-ins are not available right now. You can still use the private support tools or Find A Helpline.';
   }
@@ -315,15 +325,35 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
 
 teamSupportForm.addEventListener('submit', async (event) => {
   event.preventDefault(); const form = event.currentTarget; const status = teamSupportStatus; const submit = teamSupportSubmit;
-  if (!teamSupportAvailable) { status.textContent = 'Team check-ins are not available right now. Please use the support tools in the app or Find A Helpline.'; return; }
+  if (!teamSupportAvailable || readTeamRequest() || teamRequestCreationLocked) { status.textContent = 'This request form is not available right now. Please use the support tools in the app or Find A Helpline.'; return; }
   const payload = { name: form.name.value.trim(), contact: form.contact.value.trim(), note: form.note.value.trim(), consent: form.consent.checked };
   submit.disabled = true; status.textContent = 'Sending your request…';
   try {
     const response = await fetch('/api/support-request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json(); if (!response.ok) throw new Error(result.error || 'We could not send your request.');
-    form.reset(); status.textContent = 'Your request is received. A team member will respond through the contact method you shared, when available.';
-  } catch { status.textContent = 'Requests are not connected yet. Please try again later or use the support tools in the app.'; }
-  finally { submit.disabled = false; }
+    if (!result.withdrawal?.id || !result.withdrawal?.token) throw new Error('Your request could not be prepared for withdrawal control.');
+    teamRequestCreationLocked = true;
+    try { sessionStorage.setItem('igh-team-request', JSON.stringify(result.withdrawal)); } catch {
+      setTeamSupportEnabled(true);
+      status.textContent = 'Your request is received. This browser could not keep the withdrawal control, so please do not submit another request from this browser.';
+      return;
+    }
+    form.reset(); setTeamSupportEnabled(true); status.textContent = 'Your request is received. A team member may respond through the contact method you shared. You can withdraw this request from this browser session.';
+  } catch (error) { status.textContent = error.message || 'Requests are not connected yet. Please try again later or use the support tools in the app.'; }
+  finally { setTeamSupportEnabled(teamSupportAvailable); }
+});
+
+withdrawTeamRequestButton.addEventListener('click', async () => {
+  const request = readTeamRequest();
+  if (!request?.id || !request?.token) { removeTeamRequest(); teamRequestCreationLocked = false; setTeamSupportEnabled(teamSupportAvailable); teamSupportStatus.textContent = 'There is no request from this browser session to withdraw.'; return; }
+  withdrawTeamRequestButton.disabled = true; teamSupportStatus.textContent = 'Withdrawing your request…';
+  try {
+    const response = await fetch('/api/support-request', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.withdrawn) throw new Error(result.error || 'Your request could not be withdrawn.');
+    removeTeamRequest(); teamRequestCreationLocked = false; setTeamSupportEnabled(teamSupportAvailable); teamSupportStatus.textContent = 'Your request has been withdrawn from the team queue.';
+  } catch (error) { teamSupportStatus.textContent = error.message || 'Your request could not be withdrawn right now.'; }
+  finally { withdrawTeamRequestButton.disabled = false; }
 });
 
 createPrivateSpaceButton.addEventListener('click', async (event) => {
