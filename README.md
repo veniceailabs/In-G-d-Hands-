@@ -2,9 +2,9 @@
 
 A calm, non-clinical first-step experience for people who feel anxious, overwhelmed, disconnected, mentally exhausted, or unsure where to begin.
 
-## Current prototype
+## Current private MVP
 
-The first interactive surface is intentionally local-only:
+The self-guided core is intentionally local to the person's browser. The connected scope is deliberately narrow:
 
 - state-based, user-selected support paths;
 - brief, non-diagnostic reflection prompts;
@@ -37,22 +37,21 @@ Then visit `http://127.0.0.1:4474`.
 
 This folder deploys as a static Vercel project without a build command. `vercel.json` adds a small baseline of browser security headers, and the connected GitHub `main` branch supplies production deployments.
 
-## Supabase - privacy-first integration boundary
+## Supabase - privacy-first storage boundary
 
-Do not connect Supabase until the product has an approved data inventory, retention schedule, and consent wording. The initial safe storage scope should be limited to the user's explicit choices:
+The live Supabase project is limited to three explicitly bounded uses:
 
-1. account and authentication only when an account is chosen by the user;
-2. consent records, including scope, version, and withdrawal;
-3. optional saved reflections and selected support-tool feedback;
-4. user-controlled export and deletion.
+1. an optional anonymous Auth account, created only after a security check;
+2. a server-only queue for a person who consents to send a contact method and a team-check-in request;
+3. off-by-default aggregate practice feedback containing only a practice category and one fixed response.
 
-The browser must use only the Supabase project URL and publishable/anon key. Keep service-role credentials server-only. Before any live storage is enabled, define row-level security, account deletion, retention, support-resource jurisdiction, and the crisis escalation experience with qualified privacy, legal, and clinical advisors.
+Reflections, selected feelings, private writing, Honey transcripts, contacts not submitted to the team, and a browser or device identifier are not stored as part of the product's wellness experience. The browser uses no Supabase service-role credential; that credential stays server-only. Any new category of storage requires an approved data inventory, retention/deletion procedure, consent language, row-level security, and qualified privacy, legal, and clinical review.
 
 ### Optional private spaces
 
 The site supports an optional anonymous Supabase Auth account. It asks for no name, email, phone number, health profile, contacts, or location; it creates only a random technical account identifier and keeps the issued session in browser session storage. The account is not recoverable after browser data is cleared or on another device, and the user can delete the anonymous account from the privacy panel.
 
-Before enabling it in production, enable **Anonymous Sign-Ins** in Supabase Auth and configure Cloudflare Turnstile. Set `TURNSTILE_SITE_KEY` and the sensitive `TURNSTILE_SECRET_KEY` in Vercel. The widget is loaded only after a person asks to create a private space, and the server validates every token before it asks Supabase to create an anonymous account. The site will safely show a setup message until the requirements are present. Do not claim that no technical information is ever processed: hosting and security services may process limited operational information such as IP address and browser data.
+Private-space setup requires **Anonymous Sign-Ins** in Supabase Auth and Cloudflare Turnstile with `TURNSTILE_SITE_KEY` and the sensitive `TURNSTILE_SECRET_KEY` in Vercel. The widget is loaded only after a person asks to create a private space, and the server validates every token before it asks Supabase to create an anonymous account. The site safely shows a setup message if these requirements are unavailable. Do not claim that no technical information is ever processed: hosting and security services may process limited operational information such as IP address and browser data.
 
 ### Honey availability protection
 
@@ -62,7 +61,7 @@ Honey keeps a short, in-memory pace limit for ordinary messages from the same te
 
 The public app is installable from supported browsers. Its shell and self-guided practices can open during a temporary connection loss; Honey, private-space creation/deletion, Turnstile, team check-ins, and external resources remain online-only. The app does not queue messages, contact details, or private writing for later transmission.
 
-The first migration, [`supabase/migrations/20260814000000_team_support_requests.sql`](supabase/migrations/20260814000000_team_support_requests.sql), creates the minimal server-only queue for consented requests to speak with the team. It deliberately creates no browser-access policy.
+The team-support migrations create the minimal server-only queue for consented requests to speak with the team; they deliberately create no browser-access policy. [`20260814003000_add_anonymous_practice_feedback.sql`](supabase/migrations/20260814003000_add_anonymous_practice_feedback.sql) creates the separate aggregate-only feedback table, also with no browser policy.
 
 ### Private owner support queue
 
