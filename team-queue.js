@@ -22,7 +22,16 @@ function applySharedPreferences() {
 }
 applySharedPreferences();
 
+function clearQueueDetails() {
+  queueList.replaceChildren();
+  queueSummary.textContent = '';
+  queueStatus.textContent = '';
+  loadMoreButton.hidden = true;
+  nextOffset = 0;
+  loadedCount = 0;
+}
 function showLogin(message = '') {
+  clearQueueDetails();
   queueSection.hidden = true; loginSection.hidden = false;
   loginStatus.textContent = message;
   document.querySelector('#owner-password').focus();
@@ -48,6 +57,7 @@ function renderRequest(item) {
     try {
       const response = await fetch('/api/support-queue', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: item.id, status: nextStatus }) });
       const result = await response.json().catch(() => ({}));
+      if (response.status === 401) return showLogin('Your private session has ended. Please sign in again.');
       if (!response.ok) throw new Error(result.error || 'The status could not be updated.');
       item.status = result.request.status; queueStatus.textContent = 'Request status updated.';
     } catch (error) { select.value = item.status; queueStatus.textContent = error.message || 'The status could not be updated.'; }
@@ -100,7 +110,10 @@ document.querySelectorAll('[data-queue-filter]').forEach((button) => button.addE
 }));
 document.querySelector('[data-refresh-queue]').addEventListener('click', loadQueue);
 loadMoreButton.addEventListener('click', () => loadQueue({ append: true }));
-document.querySelector('[data-sign-out]').addEventListener('click', async () => { await fetch('/api/team-session', { method: 'DELETE' }); showLogin('Signed out.'); });
+document.querySelector('[data-sign-out]').addEventListener('click', async () => {
+  try { await fetch('/api/team-session', { method: 'DELETE' }); }
+  finally { showLogin('Signed out.'); }
+});
 
 (async () => {
   try {
