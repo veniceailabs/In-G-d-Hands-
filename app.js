@@ -414,7 +414,7 @@ document.querySelector('#chat-form').addEventListener('submit', async (event) =>
     addMessage(result.message);
     chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: result.message });
     chatHistory = chatHistory.slice(-8);
-    if (result.type === 'urgent') urgentDialog.showModal();
+    if (result.type === 'urgent') { closeChat({ restoreFocus: false }); urgentDialog.showModal(); }
     if (result.type === 'professional') addProfessionalResourceAction();
   } catch { pending.remove(); const fallback = 'Honey’s live chat connection is not available just yet. You can still choose a gentle support path here or request a check-in with the team.'; addMessage(fallback); chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: fallback }); chatHistory = chatHistory.slice(-8); }
   finally { window.clearTimeout(gentleWait); honeyIsResponding = false; sendChatButton.disabled = false; }
