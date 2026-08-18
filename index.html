@@ -305,9 +305,11 @@
       <div class="journal-tools-row">
         <button class="secondary-button journal-voice-button" type="button" id="journal-voice-button" hidden>🎙 Start voice typing</button>
         <button class="text-button journal-sound-toggle" type="button" id="journal-sound-toggle" aria-pressed="true">🔊 Writing sound on</button>
+        <span class="journal-word-count" id="journal-word-count" aria-live="polite"></span>
       </div>
       <p class="journal-voice-note" id="journal-voice-note" hidden>Voice typing uses your browser's built-in dictation. On some browsers this sends audio to your browser or device maker's speech service to turn it into text - it is not covered by In Göd Hands' own no-recording promise for writing and Honey messages.</p>
       <div class="dialog-actions journal-actions">
+        <button class="secondary-button" type="button" id="journal-copy-button">Copy writing</button>
         <button class="secondary-button" type="button" data-clear-journal>Clear without saving</button>
         <button class="primary-button" type="button" id="journal-save-button">Save privately <span aria-hidden="true">→</span></button>
       </div>

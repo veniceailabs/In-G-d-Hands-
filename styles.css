@@ -275,6 +275,7 @@ html[data-theme="dark"] .journal-pencil { color: #f5cc83; }
 .journal-tools-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: .85rem; }
 .journal-voice-button[aria-pressed="true"] { background: #9a5a2b; color: #fff; border-color: #9a5a2b; }
 .journal-sound-toggle[aria-pressed="false"] { opacity: .6; }
+.journal-word-count { margin-left: auto; color: var(--muted); font-size: .8rem; font-weight: 600; }
 .journal-voice-note { color: var(--muted); font-size: .78rem; margin: .6rem 0 0; }
 .journal-locked { margin-top: 1.25rem; border-top: 1px solid rgba(154, 90, 43, .3); padding-top: 1.1rem; }
 .journal-entries { margin-top: 1.5rem; border-top: 1px solid rgba(154, 90, 43, .3); padding-top: 1.1rem; }

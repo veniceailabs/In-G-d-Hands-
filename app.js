@@ -94,6 +94,8 @@ const journalCloseConfirmButton = document.querySelector('[data-close-confirm]')
 const journalOpenButtons = [...document.querySelectorAll('[data-open-journal]')];
 const journalTextarea = document.querySelector('#journal-entry');
 const journalPencil = document.querySelector('#journal-pencil');
+const journalCopyButton = document.querySelector('#journal-copy-button');
+const journalWordCount = document.querySelector('#journal-word-count');
 const journalSaveButton = document.querySelector('#journal-save-button');
 const journalStatus = document.querySelector('#journal-status');
 const journalLocked = document.querySelector('#journal-locked');
@@ -576,6 +578,12 @@ document.querySelector('[data-clear-chat]').addEventListener('click', clearChat)
 document.querySelectorAll('[data-open-team]').forEach((button) => button.addEventListener('click', () => { closeChat({ restoreFocus: false }); openTeamSupport(); }));
 document.querySelectorAll('[data-chat-prompt]').forEach((button) => button.addEventListener('click', () => { chatInput.value = button.dataset.chatPrompt; document.querySelector('#chat-form').requestSubmit(); }));
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !chatDrawer.hidden) closeChat(); });
+chatInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    document.querySelector('#chat-form').requestSubmit();
+  }
+});
 
 document.querySelector('#chat-form').addEventListener('submit', async (event) => {
   event.preventDefault(); const text = chatInput.value.trim(); if (!text || honeyIsResponding) return;
@@ -843,6 +851,25 @@ function tryStartAudioOnUserGesture(event) {
   document.addEventListener(eventName, tryStartAudioOnUserGesture, { passive: true });
 });
 
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (calmAudioContext && calmAudioContext.state === 'running' && calmMasterGain) {
+      try {
+        calmMasterGain.gain.setValueAtTime(calmMasterGain.gain.value, calmAudioContext.currentTime);
+        calmMasterGain.gain.linearRampToValueAtTime(0, calmAudioContext.currentTime + 0.3);
+      } catch {}
+    }
+  } else {
+    if (preferences.calmSound && calmSoundStarted && calmAudioContext && calmMasterGain) {
+      if (calmAudioContext.state === 'suspended') calmAudioContext.resume();
+      try {
+        calmMasterGain.gain.setValueAtTime(calmMasterGain.gain.value, calmAudioContext.currentTime);
+        calmMasterGain.gain.linearRampToValueAtTime((preferences.calmVolume / 100) * 0.45, calmAudioContext.currentTime + 0.4);
+      } catch {}
+    }
+  }
+});
+
 /* Private journal: writing is saved only through the browser's own,
    RLS-protected connection to the person's private-space account. No server
    route in this app ever reads or writes journal entries. */
@@ -994,7 +1021,17 @@ function playPencilScratch() {
   noise.connect(filter); filter.connect(gain); gain.connect(context.destination);
   noise.start(); noise.stop(context.currentTime + duration);
 }
-journalTextarea.addEventListener('input', () => { nudgeJournalPencil(); playPencilScratch(); });
+function updateJournalWordCount() {
+  if (!journalWordCount) return;
+  const text = journalTextarea.value.trim();
+  if (!text) {
+    journalWordCount.textContent = '';
+    return;
+  }
+  const words = text.split(/\s+/).filter(Boolean).length;
+  journalWordCount.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+}
+journalTextarea.addEventListener('input', () => { nudgeJournalPencil(); playPencilScratch(); updateJournalWordCount(); });
 journalSoundToggle.addEventListener('click', () => {
   preferences.journalSound = !preferences.journalSound;
   savePreferences(preferences);
@@ -1022,6 +1059,7 @@ if (SpeechRecognitionCtor) {
       if (addition) {
         journalTextarea.value = `${journalTextarea.value}${journalTextarea.value && !journalTextarea.value.endsWith(' ') ? ' ' : ''}${addition}`.trimStart();
         nudgeJournalPencil();
+        updateJournalWordCount();
       }
     };
     journalVoiceRecognition.onerror = () => { journalVoiceActive = false; journalVoiceButton.textContent = '🎙 Start voice typing'; journalVoiceButton.setAttribute('aria-pressed', 'false'); };
@@ -1035,6 +1073,7 @@ journalOpenButtons.forEach((button) => button.addEventListener('click', () => {
   journalStatus.textContent = '';
   journalEraseArmed = false; journalEraseButton.textContent = 'Erase all entries';
   resetJournalPencil();
+  updateJournalWordCount();
   journalDialog.showModal();
   loadJournalEntries();
 }));
@@ -1043,8 +1082,25 @@ document.querySelector('[data-clear-journal]').addEventListener('click', () => {
   journalTextarea.value = '';
   journalStatus.textContent = 'Cleared. Nothing was saved.';
   resetJournalPencil();
+  updateJournalWordCount();
 });
-journalDiscardCloseButton?.addEventListener('click', forceCloseJournal);
+journalCopyButton?.addEventListener('click', async () => {
+  const text = journalTextarea.value.trim();
+  if (!text) {
+    journalStatus.textContent = 'Write something first to copy.';
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    journalStatus.textContent = 'Copied writing to clipboard.';
+  } catch {
+    journalStatus.textContent = 'Could not copy to clipboard.';
+  }
+});
+journalDiscardCloseButton?.addEventListener('click', () => {
+  forceCloseJournal();
+  updateJournalWordCount();
+});
 journalKeepWritingButton?.addEventListener('click', () => {
   journalConfirmDialog?.close();
   journalTextarea?.focus();
@@ -1053,4 +1109,4 @@ journalCloseConfirmButton?.addEventListener('click', () => {
   journalConfirmDialog?.close();
   journalTextarea?.focus();
 });
-journalDialog.addEventListener('close', () => { stopJournalVoiceTyping(); resetJournalPencil(); });
+journalDialog.addEventListener('close', () => { stopJournalVoiceTyping(); resetJournalPencil(); updateJournalWordCount(); });
