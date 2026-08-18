@@ -736,10 +736,111 @@ deletePrivateSpaceButton.addEventListener('click', async (event) => {
   } finally { button.disabled = false; }
 });
 
-/* Calm background sound: a warm, fully synthesized ambient music pad. Nothing is
-   downloaded or streamed - it is generated on-device with the Web Audio API.
-   Browsers block audio with sound before any user interaction, so this
-   starts on user tap, click, or keypress rather than unprompted page load. */
+let handpanTimer;
+const handpanScale432 = [
+  144.18, // D3 (Ding center fundamental)
+  216.00, // A3 (pure 432/2 fifth)
+  228.84, // Bb3
+  256.87, // C4
+  288.35, // D4
+  323.63, // E4
+  342.86, // F4
+  384.87, // G4
+  432.00, // A4 (432 Hz tuning standard)
+  513.74, // C5
+  576.70  // D5
+];
+
+function playHandpanNote(frequency, velocity = 0.55) {
+  if (!calmAudioContext || calmAudioContext.state !== 'running' || !calmMasterGain || !preferences.calmSound) return;
+  const ctx = calmAudioContext;
+  const now = ctx.currentTime;
+
+  const noteGain = ctx.createGain();
+  noteGain.gain.setValueAtTime(0.0001, now);
+  noteGain.gain.exponentialRampToValueAtTime(0.38 * velocity, now + 0.015);
+  noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+  noteGain.connect(calmMasterGain);
+
+  // Fundamental Handpan tone (warm resonant sine)
+  const osc1 = ctx.createOscillator();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(frequency, now);
+
+  // Octave Harmonic (Helmholtz cavity mode)
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(frequency * 2, now);
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(0.35 * velocity, now);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
+  osc2.connect(gain2);
+  gain2.connect(noteGain);
+
+  // Compound 5th Harmonic (Transverse mode)
+  const osc3 = ctx.createOscillator();
+  osc3.type = 'sine';
+  osc3.frequency.setValueAtTime(frequency * 3.003, now);
+  const gain3 = ctx.createGain();
+  gain3.gain.setValueAtTime(0.18 * velocity, now);
+  gain3.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+  osc3.connect(gain3);
+  gain3.connect(noteGain);
+
+  // Gentle mallet contact resonance
+  const malletFilter = ctx.createBiquadFilter();
+  malletFilter.type = 'bandpass';
+  malletFilter.frequency.setValueAtTime(frequency * 1.6, now);
+  malletFilter.Q.setValueAtTime(4, now);
+
+  const malletOsc = ctx.createOscillator();
+  malletOsc.type = 'triangle';
+  malletOsc.frequency.setValueAtTime(frequency * 0.5, now);
+
+  const malletGain = ctx.createGain();
+  malletGain.gain.setValueAtTime(0.22 * velocity, now);
+  malletGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+
+  malletOsc.connect(malletFilter);
+  malletFilter.connect(malletGain);
+  malletGain.connect(noteGain);
+
+  osc1.connect(noteGain);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc3.start(now);
+  malletOsc.start(now);
+
+  osc1.stop(now + 3.4);
+  osc2.stop(now + 2.2);
+  osc3.stop(now + 1.6);
+  malletOsc.stop(now + 0.06);
+}
+
+function scheduleNextHandpanNote() {
+  if (!calmSoundStarted || !preferences.calmSound) return;
+  const delay = 2800 + Math.random() * 2600;
+  handpanTimer = window.setTimeout(() => {
+    if (!calmSoundStarted || !preferences.calmSound) return;
+    const idx = Math.floor(Math.random() * handpanScale432.length);
+    const velocity = 0.5 + Math.random() * 0.35;
+    playHandpanNote(handpanScale432[idx], velocity);
+
+    if (Math.random() < 0.35) {
+      window.setTimeout(() => {
+        if (!calmSoundStarted || !preferences.calmSound) return;
+        const harmonyIdx = (idx + (Math.random() < 0.5 ? 2 : 4)) % handpanScale432.length;
+        playHandpanNote(handpanScale432[harmonyIdx], velocity * 0.7);
+      }, 280 + Math.random() * 120);
+    }
+
+    scheduleNextHandpanNote();
+  }, delay);
+}
+
+/* Calm background sound: a 432 Hz handpan and warm ambient music soundscape.
+   Generated on-device with the Web Audio API on first tap, click, or keypress. */
 function startCalmSound() {
   if (calmSoundStarted || calmSoundStarting || !preferences.calmSound) return;
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -752,6 +853,7 @@ function startCalmSound() {
       calmSoundStarting = false;
       return;
     }
+    window.clearTimeout(handpanTimer);
     calmOscillators.forEach(({ oscillator, lfo }) => { try { oscillator.stop(); lfo.stop(); } catch {} });
     calmOscillators = [];
 
@@ -765,12 +867,13 @@ function startCalmSound() {
     filter.frequency.value = 1100;
     filter.connect(calmMasterGain);
 
+    // 432 Hz Drone Harmonizers (A2 108Hz, D3 144Hz, A3 216Hz, D4 288Hz, A4 432Hz)
     const voices = [
-      { frequency: 174.61, level: 0.5, lfoRate: 0.04, type: 'sine' },
-      { frequency: 220.00, level: 0.35, lfoRate: 0.06, type: 'sine' },
-      { frequency: 261.63, level: 0.35, lfoRate: 0.05, type: 'triangle' },
-      { frequency: 329.63, level: 0.22, lfoRate: 0.07, type: 'sine' },
-      { frequency: 392.00, level: 0.15, lfoRate: 0.09, type: 'sine' },
+      { frequency: 108.00, level: 0.45, lfoRate: 0.03, type: 'sine' },
+      { frequency: 144.18, level: 0.48, lfoRate: 0.04, type: 'sine' },
+      { frequency: 216.00, level: 0.38, lfoRate: 0.06, type: 'sine' },
+      { frequency: 288.35, level: 0.30, lfoRate: 0.05, type: 'triangle' },
+      { frequency: 432.00, level: 0.18, lfoRate: 0.08, type: 'sine' },
     ];
 
     calmOscillators = voices.map(({ frequency, level, lfoRate, type }) => {
@@ -782,7 +885,7 @@ function startCalmSound() {
       const lfo = context.createOscillator();
       lfo.frequency.value = lfoRate;
       const lfoGain = context.createGain();
-      lfoGain.gain.setValueAtTime(level * 0.3, context.currentTime);
+      lfoGain.gain.setValueAtTime(level * 0.28, context.currentTime);
       lfo.connect(lfoGain);
       lfoGain.connect(voiceGain.gain);
       oscillator.connect(voiceGain);
@@ -794,12 +897,15 @@ function startCalmSound() {
 
     calmMasterGain.gain.linearRampToValueAtTime(targetVolume, context.currentTime + 1.2);
     calmSoundStarted = true;
+    playHandpanNote(432.00, 0.6);
+    scheduleNextHandpanNote();
   }).catch(() => {}).finally(() => {
     calmSoundStarting = false;
   });
 }
 
 function stopCalmSound() {
+  window.clearTimeout(handpanTimer);
   if (!calmSoundStarted && !calmSoundStarting) return;
   const context = calmAudioContext;
   if (calmMasterGain && context && context.state === 'running') {

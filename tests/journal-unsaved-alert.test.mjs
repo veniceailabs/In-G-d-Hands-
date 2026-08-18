@@ -37,4 +37,8 @@ test('calm ambient sound is on-device, toggleable, and responsive to user intera
   assert.match(appSource, /AudioContext/);
   assert.match(appSource, /tryStartAudioOnUserGesture/);
   assert.match(appSource, /calmMasterGain/);
+  assert.match(appSource, /handpanScale432/);
+  assert.match(appSource, /playHandpanNote/);
+  assert.match(appSource, /scheduleNextHandpanNote/);
 });
+
