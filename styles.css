@@ -289,8 +289,10 @@ html[data-theme="dark"] .journal-entry-card { background: rgba(0,0,0,.2); }
 html[data-theme="dark"] .journal-entry-delete { color: #f5cc83; }
 
 /* Unsaved writing confirmation dialog */
-.confirm-dialog { width: min(calc(100% - 2rem), 480px); background: var(--surface); }
-.confirm-dialog h2 { margin: 0 0 .4rem; }
-.confirm-copy { color: var(--muted); font-size: .92rem; line-height: 1.5; margin: .4rem 0 1.25rem; }
-.confirm-actions { display: flex; gap: .65rem; justify-content: flex-end; flex-wrap: wrap; }
+.confirm-dialog { width: min(calc(100% - 2rem), 480px); background: var(--surface); padding: clamp(1.4rem, 4vw, 2.25rem); }
+.confirm-dialog h2 { margin: .3rem 0 .5rem; font-size: clamp(1.6rem, 3.5vw, 2.2rem); }
+.confirm-copy { color: var(--muted); font-size: .95rem; line-height: 1.55; margin: 0 0 1.5rem; }
+.confirm-actions { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; flex-wrap: wrap; }
+.confirm-actions .secondary-button { margin: 0; }
+
 
