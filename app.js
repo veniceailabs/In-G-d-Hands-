@@ -205,6 +205,12 @@ function updateConnectionNotice() {
 window.addEventListener('online', updateConnectionNotice);
 window.addEventListener('offline', updateConnectionNotice);
 updateConnectionNotice();
+
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (preferences.theme === 'system') applyPreferences();
+  });
+}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); }, { once: true });
 }

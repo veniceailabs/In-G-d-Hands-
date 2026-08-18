@@ -35,6 +35,7 @@ html[data-theme="dark"] .eyebrow, html[data-theme="dark"] .step-label, html[data
 html[data-theme="dark"] .ambient-one { opacity: .22; } html[data-theme="dark"] .ambient-two { opacity: .2; }
 html[data-high-contrast="true"] { --ink: #111; --deep: #001e2a; --muted: #2a3439; --line: rgba(0,0,0,.65); }
 html[data-theme="dark"][data-high-contrast="true"] { --ink:#fff; --deep:#fff; --muted:#f1f5f6; --line:rgba(255,255,255,.78); --paper:#000; --surface:#111; }
+html[data-high-contrast="true"] .state-card, html[data-high-contrast="true"] .tool-card, html[data-high-contrast="true"] dialog, html[data-high-contrast="true"] .check-in, html[data-high-contrast="true"] input, html[data-high-contrast="true"] textarea, html[data-high-contrast="true"] .support-option, html[data-high-contrast="true"] .grounding-step, html[data-high-contrast="true"] .movement-step, html[data-high-contrast="true"] .journal-entry-card { border: 2px solid currentColor; }
 html[data-theme="dark"][data-high-contrast="true"] .primary-button { background:#005f73; color:#fff; border:2px solid #fff; }
 html[data-theme="dark"][data-high-contrast="true"] .primary-button:hover { background:#0a7187; }
 html[data-text-scale="large"] { font-size: 112.5%; }
