@@ -83,6 +83,27 @@ const deleteSpaceConfirmRow = document.querySelector('.delete-space-confirm');
 const privateSpaceCheck = document.querySelector('#private-space-check');
 const privateSpaceTurnstile = document.querySelector('#private-space-turnstile');
 const cancelPrivateSpaceButton = document.querySelector('[data-cancel-private-space]');
+const calmSoundButton = document.querySelector('#calm-sound-button');
+const calmSoundToggle = document.querySelector('#calm-sound-toggle');
+const calmSoundVolumeSlider = document.querySelector('#calm-sound-volume');
+const journalDialog = document.querySelector('#journal-dialog');
+const journalConfirmDialog = document.querySelector('#journal-confirm-dialog');
+const journalDiscardCloseButton = document.querySelector('#journal-discard-close-button');
+const journalKeepWritingButton = document.querySelector('#journal-keep-writing-button');
+const journalCloseConfirmButton = document.querySelector('[data-close-confirm]');
+const journalOpenButtons = [...document.querySelectorAll('[data-open-journal]')];
+const journalTextarea = document.querySelector('#journal-entry');
+const journalPencil = document.querySelector('#journal-pencil');
+const journalSaveButton = document.querySelector('#journal-save-button');
+const journalStatus = document.querySelector('#journal-status');
+const journalLocked = document.querySelector('#journal-locked');
+const journalOpenPrivacyButton = document.querySelector('#journal-open-privacy');
+const journalEntriesSection = document.querySelector('#journal-entries');
+const journalEntryList = document.querySelector('#journal-entry-list');
+const journalEraseButton = document.querySelector('#journal-erase-button');
+const journalVoiceButton = document.querySelector('#journal-voice-button');
+const journalVoiceNote = document.querySelector('#journal-voice-note');
+const journalSoundToggle = document.querySelector('#journal-sound-toggle');
 let breathingTimer;
 let activePracticeVoice;
 let activePracticeVoiceButton;
@@ -97,13 +118,24 @@ let teamRequestCreationLocked = false;
 let lastChatOpener = chatOpeners[0];
 let turnstileScriptPromise;
 let turnstileWidgetId;
+let calmAudioContext;
+let calmMasterGain;
+let calmOscillators = [];
+let calmSoundStarted = false;
+let calmSoundStarting = false;
+let journalConfigPromise;
+let journalEraseArmed = false;
+let journalEraseResetTimer;
+let journalVoiceRecognition;
+let journalVoiceActive = false;
+let lastPencilSoundAt = 0;
 const honeyGreeting = 'Hi, I’m Honey. I can sit with you for a moment, help you find a small next step, or help you request a check-in with the team. What feels most helpful right now?';
 
 function readPreferences() {
   try { return JSON.parse(localStorage.getItem('igh-preferences')) || {}; } catch { return {}; }
 }
 function savePreferences(next) { localStorage.setItem('igh-preferences', JSON.stringify(next)); }
-let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, anonymousFeedback: false, ...readPreferences() };
+let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, anonymousFeedback: false, calmSound: true, calmVolume: 22, journalSound: true, ...readPreferences() };
 
 function readPrivateSpace() {
   try { return JSON.parse(sessionStorage.getItem('igh-private-space') || 'null'); } catch { return null; }
@@ -148,6 +180,19 @@ function applyPreferences() {
   anonymousFeedbackSetting.checked = preferences.anonymousFeedback;
   completionFeedbackNote.hidden = !preferences.anonymousFeedback;
   document.querySelector('#text-size-status').textContent = preferences.textScale === 'default' ? 'Default' : preferences.textScale === 'large' ? 'Large' : 'Largest';
+  calmSoundToggle.checked = preferences.calmSound;
+  calmSoundVolumeSlider.value = String(preferences.calmVolume);
+  calmSoundButton.setAttribute('aria-pressed', String(preferences.calmSound));
+  calmSoundButton.setAttribute('aria-label', preferences.calmSound ? 'Turn off calm background sound' : 'Turn on calm background sound');
+  if (calmMasterGain && calmAudioContext) {
+    const target = preferences.calmSound ? (preferences.calmVolume / 100) * 0.45 : 0;
+    try {
+      calmMasterGain.gain.setValueAtTime(calmMasterGain.gain.value, calmAudioContext.currentTime);
+      calmMasterGain.gain.linearRampToValueAtTime(target, calmAudioContext.currentTime + 0.3);
+    } catch {
+      calmMasterGain.gain.value = target;
+    }
+  }
 }
 applyPreferences();
 updatePrivateSpaceControls();
@@ -410,14 +455,60 @@ function clearChat() {
   addMessage('This conversation has been cleared from this page.', 'loading');
 }
 
+function hasUnsavedJournalWriting() {
+  return Boolean(journalTextarea?.value?.trim());
+}
+function showJournalDiscardConfirmation() {
+  if (journalConfirmDialog && !journalConfirmDialog.open) journalConfirmDialog.showModal();
+}
+function forceCloseJournal() {
+  if (journalTextarea) journalTextarea.value = '';
+  stopJournalVoiceTyping();
+  resetJournalPencil();
+  if (journalConfirmDialog?.open) journalConfirmDialog.close();
+  if (journalDialog?.open) journalDialog.close();
+}
+function requestCloseJournal() {
+  if (hasUnsavedJournalWriting()) {
+    showJournalDiscardConfirmation();
+  } else {
+    forceCloseJournal();
+  }
+}
+
 document.querySelectorAll('[data-state]').forEach((button) => button.addEventListener('click', () => showSupport(button.dataset.state)));
 document.querySelectorAll('[data-practice]').forEach((button) => button.addEventListener('click', () => openPractice(button.dataset.practice)));
-document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
+document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => {
+  const dialog = button.closest('dialog');
+  if (dialog === journalDialog) {
+    requestCloseJournal();
+    return;
+  }
+  dialog?.close();
+}));
 document.querySelectorAll('[data-open-reflection]').forEach((button) => button.addEventListener('click', () => { urgentDialog.close(); reflectionDialog.showModal(); }));
 document.querySelectorAll('[data-open-urgent]').forEach((button) => button.addEventListener('click', () => urgentDialog.showModal()));
 document.querySelector('[data-back]').addEventListener('click', () => supportDialog.close());
 document.querySelector('[data-reflect]').addEventListener('click', () => { const reflection = document.querySelector('#reflection-input').value.trim(); reflectionDialog.close(); showSupport('unsure'); if (reflection) supportReflection.textContent = 'Thank you for putting that into words. You do not have to carry it all at once. Which of these feels possible?'; });
 [supportDialog, reflectionDialog, urgentDialog, practiceDialog, accessibilityDialog, privacyDialog, resourcesDialog, teamDialog, reminderDialog, completionDialog].forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
+journalDialog.addEventListener('click', (event) => { if (event.target === journalDialog) requestCloseJournal(); });
+if (journalConfirmDialog) {
+  journalConfirmDialog.addEventListener('click', (event) => {
+    if (event.target === journalConfirmDialog) {
+      journalConfirmDialog.close();
+      journalTextarea?.focus();
+    }
+  });
+}
+journalDialog.addEventListener('cancel', (event) => {
+  if (hasUnsavedJournalWriting()) {
+    event.preventDefault();
+    showJournalDiscardConfirmation();
+  } else {
+    stopJournalVoiceTyping();
+    resetJournalPencil();
+  }
+});
 practiceDialog.addEventListener('close', () => window.clearInterval(breathingTimer));
 
 async function sendAnonymousFeedback(feeling) {
@@ -636,3 +727,330 @@ deletePrivateSpaceButton.addEventListener('click', async (event) => {
     status.textContent = error.message || 'We could not delete your private space. Please try again.';
   } finally { button.disabled = false; }
 });
+
+/* Calm background sound: a warm, fully synthesized ambient music pad. Nothing is
+   downloaded or streamed - it is generated on-device with the Web Audio API.
+   Browsers block audio with sound before any user interaction, so this
+   starts on user tap, click, or keypress rather than unprompted page load. */
+function startCalmSound() {
+  if (calmSoundStarted || calmSoundStarting || !preferences.calmSound) return;
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) return;
+  calmSoundStarting = true;
+  const context = calmAudioContext || (calmAudioContext = new AudioContextCtor());
+  const ready = context.state === 'suspended' ? context.resume() : Promise.resolve();
+  ready.then(() => {
+    if (!preferences.calmSound) {
+      calmSoundStarting = false;
+      return;
+    }
+    calmOscillators.forEach(({ oscillator, lfo }) => { try { oscillator.stop(); lfo.stop(); } catch {} });
+    calmOscillators = [];
+
+    calmMasterGain = context.createGain();
+    const targetVolume = (preferences.calmVolume / 100) * 0.45;
+    calmMasterGain.gain.setValueAtTime(0, context.currentTime);
+    calmMasterGain.connect(context.destination);
+
+    const filter = context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1100;
+    filter.connect(calmMasterGain);
+
+    const voices = [
+      { frequency: 174.61, level: 0.5, lfoRate: 0.04, type: 'sine' },
+      { frequency: 220.00, level: 0.35, lfoRate: 0.06, type: 'sine' },
+      { frequency: 261.63, level: 0.35, lfoRate: 0.05, type: 'triangle' },
+      { frequency: 329.63, level: 0.22, lfoRate: 0.07, type: 'sine' },
+      { frequency: 392.00, level: 0.15, lfoRate: 0.09, type: 'sine' },
+    ];
+
+    calmOscillators = voices.map(({ frequency, level, lfoRate, type }) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = type || 'sine';
+      oscillator.frequency.value = frequency;
+      const voiceGain = context.createGain();
+      voiceGain.gain.setValueAtTime(level, context.currentTime);
+      const lfo = context.createOscillator();
+      lfo.frequency.value = lfoRate;
+      const lfoGain = context.createGain();
+      lfoGain.gain.setValueAtTime(level * 0.3, context.currentTime);
+      lfo.connect(lfoGain);
+      lfoGain.connect(voiceGain.gain);
+      oscillator.connect(voiceGain);
+      voiceGain.connect(filter);
+      oscillator.start();
+      lfo.start();
+      return { oscillator, lfo };
+    });
+
+    calmMasterGain.gain.linearRampToValueAtTime(targetVolume, context.currentTime + 1.2);
+    calmSoundStarted = true;
+  }).catch(() => {}).finally(() => {
+    calmSoundStarting = false;
+  });
+}
+
+function stopCalmSound() {
+  if (!calmSoundStarted && !calmSoundStarting) return;
+  const context = calmAudioContext;
+  if (calmMasterGain && context && context.state === 'running') {
+    try {
+      calmMasterGain.gain.setValueAtTime(calmMasterGain.gain.value, context.currentTime);
+      calmMasterGain.gain.linearRampToValueAtTime(0, context.currentTime + 0.5);
+    } catch {}
+  }
+  const oscillatorsToStop = calmOscillators;
+  calmOscillators = [];
+  calmSoundStarted = false;
+  calmSoundStarting = false;
+  window.setTimeout(() => {
+    oscillatorsToStop.forEach(({ oscillator, lfo }) => {
+      try { oscillator.stop(); lfo.stop(); } catch {}
+    });
+  }, 600);
+}
+
+calmSoundButton.addEventListener('click', () => {
+  preferences.calmSound = !preferences.calmSound;
+  savePreferences(preferences);
+  applyPreferences();
+  if (preferences.calmSound) startCalmSound();
+  else stopCalmSound();
+});
+
+calmSoundToggle.addEventListener('change', () => {
+  preferences.calmSound = calmSoundToggle.checked;
+  savePreferences(preferences);
+  applyPreferences();
+  if (preferences.calmSound) startCalmSound();
+  else stopCalmSound();
+});
+
+calmSoundVolumeSlider.addEventListener('input', () => {
+  preferences.calmVolume = Number(calmSoundVolumeSlider.value);
+  savePreferences(preferences);
+  applyPreferences();
+});
+
+function tryStartAudioOnUserGesture(event) {
+  if (event?.target?.closest('#calm-sound-button, #calm-sound-toggle, [data-setting="calmSound"]')) return;
+  if (preferences.calmSound && !calmSoundStarted && !calmSoundStarting) {
+    startCalmSound();
+  }
+}
+['pointerdown', 'touchstart', 'touchend', 'keydown', 'click'].forEach((eventName) => {
+  document.addEventListener(eventName, tryStartAudioOnUserGesture, { passive: true });
+});
+
+/* Private journal: writing is saved only through the browser's own,
+   RLS-protected connection to the person's private-space account. No server
+   route in this app ever reads or writes journal entries. */
+function decodeJwtUserId(accessToken) {
+  try {
+    const payload = accessToken.split('.')[1];
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = JSON.parse(atob(normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')));
+    return typeof decoded.sub === 'string' ? decoded.sub : null;
+  } catch { return null; }
+}
+async function journalConfig() {
+  if (!journalConfigPromise) {
+    journalConfigPromise = fetch('/api/private-space-config', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((result) => (result?.journal?.enabled ? result.journal : null))
+      .catch(() => null);
+  }
+  return journalConfigPromise;
+}
+function journalRestUrl(baseUrl) { return `${baseUrl.replace(/\/$/, '')}/rest/v1/private_journal_entries`; }
+function journalHeaders(config, accessToken, extra = {}) {
+  return { apikey: config.anonKey, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...extra };
+}
+function journalEntryDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+function renderJournalEntry(entry, config, accessToken) {
+  const card = document.createElement('article'); card.className = 'journal-entry-card';
+  const header = document.createElement('div'); header.className = 'journal-entry-card-header';
+  const date = document.createElement('span'); date.className = 'journal-entry-date'; date.textContent = journalEntryDate(entry.created_at);
+  const deleteButton = document.createElement('button'); deleteButton.type = 'button'; deleteButton.className = 'text-button journal-entry-delete'; deleteButton.textContent = 'Delete';
+  deleteButton.addEventListener('click', async () => {
+    deleteButton.disabled = true;
+    try {
+      const response = await fetch(`${journalRestUrl(config.url)}?id=eq.${encodeURIComponent(entry.id)}`, { method: 'DELETE', headers: journalHeaders(config, accessToken) });
+      if (!response.ok) throw new Error();
+      card.remove();
+      if (!journalEntryList.children.length) journalEntryList.append(Object.assign(document.createElement('p'), { className: 'queue-empty', textContent: 'No saved entries yet.' }));
+    } catch { journalStatus.textContent = 'That entry could not be deleted right now.'; deleteButton.disabled = false; }
+  });
+  header.append(date, deleteButton); card.append(header);
+  const body = document.createElement('p'); body.className = 'journal-entry-body'; body.textContent = entry.body; card.append(body);
+  return card;
+}
+async function loadJournalEntries() {
+  const space = readPrivateSpace();
+  if (!space?.access_token) { journalLocked.hidden = false; journalEntriesSection.hidden = true; return; }
+  journalLocked.hidden = true;
+  const config = await journalConfig();
+  if (!config) { journalEntriesSection.hidden = true; return; }
+  journalEntriesSection.hidden = false;
+  journalEntryList.replaceChildren(Object.assign(document.createElement('p'), { className: 'queue-empty', textContent: 'Loading your entries…' }));
+  try {
+    const response = await fetch(`${journalRestUrl(config.url)}?select=id,body,created_at&order=created_at.desc&limit=100`, { headers: journalHeaders(config, space.access_token) });
+    if (response.status === 401) { removePrivateSpace(); updatePrivateSpaceControls(); journalLocked.hidden = false; journalEntriesSection.hidden = true; return; }
+    if (!response.ok) throw new Error();
+    const rows = await response.json();
+    journalEntryList.replaceChildren();
+    if (!Array.isArray(rows) || !rows.length) journalEntryList.append(Object.assign(document.createElement('p'), { className: 'queue-empty', textContent: 'No saved entries yet.' }));
+    else journalEntryList.append(...rows.map((entry) => renderJournalEntry(entry, config, space.access_token)));
+  } catch {
+    journalEntryList.replaceChildren(Object.assign(document.createElement('p'), { className: 'queue-empty', textContent: 'Your saved entries could not be loaded right now.' }));
+  }
+}
+async function saveJournalEntry() {
+  const text = journalTextarea.value.trim();
+  if (!text) { journalStatus.textContent = 'Write something first, or clear without saving.'; return; }
+  const space = readPrivateSpace();
+  if (!space?.access_token) { journalLocked.hidden = false; journalStatus.textContent = 'Create a private space to save entries privately.'; return; }
+  const config = await journalConfig();
+  if (!config) { journalStatus.textContent = 'Saving is not available yet. You can still write and clear without saving.'; return; }
+  const userId = decodeJwtUserId(space.access_token);
+  if (!userId) { journalStatus.textContent = 'Your private-space session could not be read. Please try again.'; return; }
+  journalSaveButton.disabled = true; journalStatus.textContent = 'Saving privately…';
+  try {
+    const response = await fetch(journalRestUrl(config.url), {
+      method: 'POST', headers: journalHeaders(config, space.access_token, { Prefer: 'return=representation' }),
+      body: JSON.stringify([{ user_id: userId, body: text }]),
+    });
+    if (response.status === 401) { removePrivateSpace(); updatePrivateSpaceControls(); journalLocked.hidden = false; throw new Error('Your private-space session ended. Please create a new one to keep saving.'); }
+    if (!response.ok) throw new Error();
+    journalTextarea.value = '';
+    journalStatus.textContent = 'Saved privately. Only you can read this.';
+    await loadJournalEntries();
+  } catch (error) { journalStatus.textContent = error.message || 'That entry could not be saved right now.'; }
+  finally { journalSaveButton.disabled = false; }
+}
+journalSaveButton.addEventListener('click', saveJournalEntry);
+journalOpenPrivacyButton.addEventListener('click', () => { journalDialog.close(); updatePrivateSpaceControls(); privacyDialog.showModal(); });
+journalEraseButton.addEventListener('click', async () => {
+  if (!journalEraseArmed) {
+    journalEraseArmed = true; journalEraseButton.textContent = 'Click again to erase everything';
+    journalEraseResetTimer = window.setTimeout(() => { journalEraseArmed = false; journalEraseButton.textContent = 'Erase all entries'; }, 4000);
+    return;
+  }
+  window.clearTimeout(journalEraseResetTimer); journalEraseArmed = false; journalEraseButton.textContent = 'Erase all entries';
+  const space = readPrivateSpace();
+  const config = await journalConfig();
+  if (!space?.access_token || !config) { journalStatus.textContent = 'There is nothing saved to erase right now.'; return; }
+  const userId = decodeJwtUserId(space.access_token);
+  journalEraseButton.disabled = true;
+  try {
+    const response = await fetch(`${journalRestUrl(config.url)}?user_id=eq.${encodeURIComponent(userId)}`, { method: 'DELETE', headers: journalHeaders(config, space.access_token) });
+    if (!response.ok) throw new Error();
+    journalStatus.textContent = 'All saved journal entries have been erased.';
+    await loadJournalEntries();
+  } catch { journalStatus.textContent = 'Your entries could not be erased right now.'; }
+  finally { journalEraseButton.disabled = false; }
+});
+
+/* A pencil that visibly moves with the caret as a person writes, plus an
+   optional, on-device paper-writing sound - purely decorative, neither reads
+   nor transmits what is typed. */
+let pencilTiltFlip = false;
+function nudgeJournalPencil() {
+  const value = journalTextarea.value;
+  const caret = journalTextarea.selectionStart ?? value.length;
+  const linesBeforeCaret = value.slice(0, caret).split('\n');
+  const line = linesBeforeCaret.length - 1;
+  const column = linesBeforeCaret[linesBeforeCaret.length - 1].length;
+  const charWidth = 7.4;
+  const lineHeight = 24;
+  const maxX = Math.max(journalTextarea.clientWidth - 44, 0);
+  const maxY = Math.max(journalTextarea.clientHeight - 34, 0);
+  const x = Math.min(column * charWidth, maxX);
+  const y = Math.min(line * lineHeight, maxY);
+  pencilTiltFlip = !pencilTiltFlip;
+  journalPencil.style.transform = `translate(${x}px, ${y}px) rotate(${pencilTiltFlip ? -24 : -14}deg)`;
+}
+function resetJournalPencil() { journalPencil.style.transform = 'translate(0, 0) rotate(-18deg)'; }
+function playPencilScratch() {
+  if (!preferences.journalSound) return;
+  const now = performance.now();
+  if (now - lastPencilSoundAt < 45) return;
+  lastPencilSoundAt = now;
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) return;
+  const context = calmAudioContext || (calmAudioContext = new AudioContextCtor());
+  const duration = 0.045;
+  const bufferSize = Math.floor(context.sampleRate * duration);
+  const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  const noise = context.createBufferSource(); noise.buffer = buffer;
+  const filter = context.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2200 + Math.random() * 900; filter.Q.value = 0.7;
+  const gain = context.createGain(); gain.gain.value = 0.05;
+  noise.connect(filter); filter.connect(gain); gain.connect(context.destination);
+  noise.start(); noise.stop(context.currentTime + duration);
+}
+journalTextarea.addEventListener('input', () => { nudgeJournalPencil(); playPencilScratch(); });
+journalSoundToggle.addEventListener('click', () => {
+  preferences.journalSound = !preferences.journalSound;
+  savePreferences(preferences);
+  journalSoundToggle.setAttribute('aria-pressed', String(preferences.journalSound));
+  journalSoundToggle.textContent = preferences.journalSound ? '🔊 Writing sound on' : '🔈 Writing sound off';
+});
+
+/* Voice typing uses the browser's own built-in dictation, not a feature this
+   app builds or hosts. On some browsers that dictation sends audio to a
+   cloud speech service, which is why the disclosure below stays visible. */
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+function stopJournalVoiceTyping() { if (journalVoiceRecognition && journalVoiceActive) journalVoiceRecognition.stop(); }
+if (SpeechRecognitionCtor) {
+  journalVoiceButton.hidden = false;
+  journalVoiceNote.hidden = false;
+  journalVoiceButton.addEventListener('click', () => {
+    if (journalVoiceActive) { stopJournalVoiceTyping(); return; }
+    journalVoiceRecognition = new SpeechRecognitionCtor();
+    journalVoiceRecognition.continuous = true;
+    journalVoiceRecognition.interimResults = false;
+    journalVoiceRecognition.lang = navigator.language || 'en-US';
+    journalVoiceRecognition.onresult = (event) => {
+      let addition = '';
+      for (let i = event.resultIndex; i < event.results.length; i += 1) if (event.results[i].isFinal) addition += `${event.results[i][0].transcript} `;
+      if (addition) {
+        journalTextarea.value = `${journalTextarea.value}${journalTextarea.value && !journalTextarea.value.endsWith(' ') ? ' ' : ''}${addition}`.trimStart();
+        nudgeJournalPencil();
+      }
+    };
+    journalVoiceRecognition.onerror = () => { journalVoiceActive = false; journalVoiceButton.textContent = '🎙 Start voice typing'; journalVoiceButton.setAttribute('aria-pressed', 'false'); };
+    journalVoiceRecognition.onend = () => { journalVoiceActive = false; journalVoiceButton.textContent = '🎙 Start voice typing'; journalVoiceButton.setAttribute('aria-pressed', 'false'); };
+    journalVoiceRecognition.start();
+    journalVoiceActive = true; journalVoiceButton.textContent = '⏹ Stop voice typing'; journalVoiceButton.setAttribute('aria-pressed', 'true');
+  });
+}
+
+journalOpenButtons.forEach((button) => button.addEventListener('click', () => {
+  journalStatus.textContent = '';
+  journalEraseArmed = false; journalEraseButton.textContent = 'Erase all entries';
+  resetJournalPencil();
+  journalDialog.showModal();
+  loadJournalEntries();
+}));
+document.querySelector('[data-clear-journal]').addEventListener('click', () => {
+  stopJournalVoiceTyping();
+  journalTextarea.value = '';
+  journalStatus.textContent = 'Cleared. Nothing was saved.';
+  resetJournalPencil();
+});
+journalDiscardCloseButton?.addEventListener('click', forceCloseJournal);
+journalKeepWritingButton?.addEventListener('click', () => {
+  journalConfirmDialog?.close();
+  journalTextarea?.focus();
+});
+journalCloseConfirmButton?.addEventListener('click', () => {
+  journalConfirmDialog?.close();
+  journalTextarea?.focus();
+});
+journalDialog.addEventListener('close', () => { stopJournalVoiceTyping(); resetJournalPencil(); });

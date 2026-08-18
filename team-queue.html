@@ -19,9 +19,11 @@
 
       <section class="owner-login" id="owner-login" aria-labelledby="sign-in-title">
         <h2 id="sign-in-title">Sign in to review requests</h2>
-        <p>Use the private owner password configured in Vercel. It is never stored in this browser.</p>
+        <p>Use your individual staff account configured in Vercel. Your password is never stored in this browser.</p>
         <form id="owner-login-form">
-          <label for="owner-password">Owner password</label>
+          <label for="owner-username">Username</label>
+          <input id="owner-username" name="username" type="text" autocomplete="username" required />
+          <label for="owner-password">Password</label>
           <input id="owner-password" name="password" type="password" autocomplete="current-password" required />
           <button class="primary-button" type="submit">Sign in <span aria-hidden="true">→</span></button>
           <p class="form-status" id="owner-login-status" role="status" aria-live="polite"></p>
@@ -31,7 +33,7 @@
       <section class="owner-queue" id="owner-queue" hidden aria-labelledby="queue-title">
         <div class="owner-queue-heading">
           <div><h2 id="queue-title">Requests</h2><p id="queue-summary" class="owner-summary" role="status" aria-live="polite"></p></div>
-          <div class="owner-actions"><button class="secondary-button" type="button" data-refresh-queue>Refresh</button><button class="text-button" type="button" data-sign-out>Sign out</button></div>
+          <div class="owner-actions"><span id="owner-signed-in-as" class="owner-signed-in-as"></span><button class="secondary-button" type="button" data-refresh-queue>Refresh</button><button class="text-button" type="button" data-sign-out>Sign out</button></div>
         </div>
         <section class="queue-pulse" id="queue-pulse" aria-label="Current queue overview" hidden></section>
         <section class="feedback-pulse" id="feedback-pulse" aria-labelledby="feedback-title" hidden>

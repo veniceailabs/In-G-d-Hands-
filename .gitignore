@@ -6,3 +6,6 @@ tmp/
 *.pdf
 .vercel
 Visual Proofs/
+.claude/
+supabase/.temp/
+

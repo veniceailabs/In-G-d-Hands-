@@ -2,6 +2,7 @@ const loginSection = document.querySelector('#owner-login');
 const queueSection = document.querySelector('#owner-queue');
 const loginForm = document.querySelector('#owner-login-form');
 const loginStatus = document.querySelector('#owner-login-status');
+const signedInAs = document.querySelector('#owner-signed-in-as');
 const queueStatus = document.querySelector('#queue-status');
 const queueSummary = document.querySelector('#queue-summary');
 const queuePulse = document.querySelector('#queue-pulse');
@@ -41,9 +42,10 @@ function showLogin(message = '') {
   clearQueueDetails();
   queueSection.hidden = true; loginSection.hidden = false;
   loginStatus.textContent = message;
-  document.querySelector('#owner-password').focus();
+  signedInAs.textContent = '';
+  document.querySelector('#owner-username').focus();
 }
-function showQueue() { loginSection.hidden = true; queueSection.hidden = false; }
+function showQueue(username = '') { loginSection.hidden = true; queueSection.hidden = false; signedInAs.textContent = username ? `Signed in as ${username}` : ''; }
 function requestLabel(status) { return status === 'in_progress' ? 'In progress' : status[0].toUpperCase() + status.slice(1); }
 function dateLabel(value) {
   const date = new Date(value);
@@ -119,6 +121,7 @@ function renderRequest(item) {
   const contact = textElement('p', item.contact_detail || 'No contact detail shared', 'queue-contact'); card.append(contact);
   const note = textElement('p', item.request_note, 'queue-note'); card.append(note);
   card.append(textElement('p', `Consent recorded ${dateLabel(item.consented_at)}.`, 'queue-consent'));
+  if (item.updated_by) card.append(textElement('p', `Last updated by ${item.updated_by}.`, 'queue-consent'));
   return card;
 }
 
@@ -146,13 +149,13 @@ async function loadQueue({ append = false } = {}) {
 }
 
 loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault(); const password = loginForm.password.value; const submit = loginForm.querySelector('button[type="submit"]');
+  event.preventDefault(); const username = loginForm.username.value; const password = loginForm.password.value; const submit = loginForm.querySelector('button[type="submit"]');
   submit.disabled = true; loginStatus.textContent = 'Signing in…';
   try {
-    const response = await fetch('/api/team-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+    const response = await fetch('/api/team-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
-    loginForm.reset(); showQueue(); loadQueue();
+    loginForm.reset(); showQueue(result.username); loadQueue();
   } catch (error) { loginStatus.textContent = error.message || 'Unable to sign in.'; }
   finally { submit.disabled = false; }
 });
@@ -172,7 +175,7 @@ document.querySelector('[data-sign-out]').addEventListener('click', async () => 
 (async () => {
   try {
     const response = await fetch('/api/team-session', { cache: 'no-store' }); const result = await response.json().catch(() => ({}));
-    if (response.ok && result.signedIn) { showQueue(); loadQueue(); }
-    else showLogin(result.configured === false ? 'This private console still needs a Vercel owner password.' : '');
+    if (response.ok && result.signedIn) { showQueue(result.username); loadQueue(); }
+    else showLogin(result.configured === false ? 'This private console still needs staff accounts configured in Vercel.' : '');
   } catch { showLogin('The private console is unavailable right now.'); }
 })();

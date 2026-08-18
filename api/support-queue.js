@@ -1,7 +1,7 @@
-import { ownerSessionIsValid } from './_team-access.js';
+import { ownerSessionUser } from './_team-access.js';
 
 const allowedStatuses = new Set(['new', 'in_progress', 'closed']);
-const selectFields = 'id,contact_name,contact_detail,request_note,consented_at,status,created_at,updated_at';
+const selectFields = 'id,contact_name,contact_detail,request_note,consented_at,status,created_at,updated_at,updated_by';
 const pageSize = 50;
 
 function reply(response, status, body) {
@@ -39,7 +39,8 @@ async function queuePulse(baseUrl, serviceRole) {
 }
 
 export default async function handler(request, response) {
-  if (!ownerSessionIsValid(request)) return reply(response, 401, { error: 'Sign in is required.' });
+  const staffUsername = ownerSessionUser(request);
+  if (!staffUsername) return reply(response, 401, { error: 'Sign in is required.' });
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return reply(response, 503, { error: 'The secure support queue is not available.' });
   const baseUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/team_support_requests`;
@@ -63,7 +64,7 @@ export default async function handler(request, response) {
       const { id, status } = readBody(request.body);
       if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) || !allowedStatuses.has(status)) return reply(response, 400, { error: 'A valid request and status are required.' });
       const update = await fetch(`${baseUrl}?id=eq.${encodeURIComponent(id)}`, {
-        method: 'PATCH', headers: supabaseHeaders(SUPABASE_SERVICE_ROLE_KEY, 'return=representation'), body: JSON.stringify({ status }),
+        method: 'PATCH', headers: supabaseHeaders(SUPABASE_SERVICE_ROLE_KEY, 'return=representation'), body: JSON.stringify({ status, updated_by: staffUsername }),
       });
       if (!update.ok) throw new Error('Queue update failed.');
       const rows = await update.json();

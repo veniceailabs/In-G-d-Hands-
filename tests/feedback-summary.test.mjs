@@ -3,10 +3,10 @@ import { createHmac } from 'node:crypto';
 import test from 'node:test';
 import feedbackSummaryHandler from '../api/feedback-summary.js';
 
-function ownerCookie(password) {
+function ownerCookie(username, password) {
   const expiresAt = String(Date.now() + (5 * 60 * 1000));
-  const signature = createHmac('sha256', password).update(expiresAt).digest('base64url');
-  return `igh_support_owner=${expiresAt}.${signature}`;
+  const signature = createHmac('sha256', password).update(`${username}.${expiresAt}`).digest('base64url');
+  return `igh_support_owner=${username}.${expiresAt}.${signature}`;
 }
 async function invoke(request) {
   let statusCode;
@@ -28,8 +28,9 @@ test('the feedback summary requires the protected owner session', async () => {
 test('the protected feedback summary returns aggregate counts only', async () => {
   const originalFetch = globalThis.fetch;
   const originalEnv = { ...process.env };
+  const username = 'teedoteinsof';
   const password = 'a safely long owner password';
-  Object.assign(process.env, { SUPPORT_QUEUE_PASSWORD: password, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key' });
+  Object.assign(process.env, { TEAM_STAFF_CREDENTIALS: `${username}:${password}`, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key' });
   let captured;
   globalThis.fetch = async (url, init) => {
     captured = { url: String(url), init };
@@ -40,7 +41,7 @@ test('the protected feedback summary returns aggregate counts only', async () =>
     ] };
   };
   try {
-    const result = await invoke({ method: 'GET', headers: { cookie: ownerCookie(password) } });
+    const result = await invoke({ method: 'GET', headers: { cookie: ownerCookie(username, password) } });
     assert.equal(result.statusCode, 200);
     assert.deepEqual(result.responseBody, {
       total: 6,

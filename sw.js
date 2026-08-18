@@ -1,4 +1,4 @@
-const CACHE_NAME = 'in-god-hands-shell-v2';
+const CACHE_NAME = 'in-god-hands-shell-v3';
 const APP_SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/favicon.svg', '/app-icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-180.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

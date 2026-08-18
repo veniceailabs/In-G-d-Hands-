@@ -66,8 +66,26 @@ test('private-space configuration exposes only the public site key', async () =>
   try {
     const configured = await invoke(privateSpaceConfigHandler, { method: 'GET' });
     assert.equal(configured.statusCode, 200);
-    assert.deepEqual(configured.responseBody, { enabled: true, siteKey: 'public-site-key' });
+    assert.deepEqual(configured.responseBody, { enabled: true, siteKey: 'public-site-key', journal: { enabled: false } });
     assert.ok(!JSON.stringify(configured.responseBody).includes('test-turnstile-secret'));
+  } finally {
+    for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
+    Object.assign(process.env, originalEnv);
+  }
+});
+
+test('journal configuration exposes only the public Supabase URL and anon key, never the service role key', async () => {
+  const originalEnv = { ...process.env };
+  Object.assign(process.env, {
+    SUPABASE_URL: 'https://example.supabase.co',
+    SUPABASE_ANON_KEY: 'public-anon-key',
+    SUPABASE_SERVICE_ROLE_KEY: 'super-secret-service-role-key',
+  });
+  try {
+    const configured = await invoke(privateSpaceConfigHandler, { method: 'GET' });
+    assert.equal(configured.statusCode, 200);
+    assert.deepEqual(configured.responseBody.journal, { enabled: true, url: 'https://example.supabase.co', anonKey: 'public-anon-key' });
+    assert.ok(!JSON.stringify(configured.responseBody).includes('super-secret-service-role-key'));
   } finally {
     for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
     Object.assign(process.env, originalEnv);

@@ -28,6 +28,9 @@
         <span>In Göd Hands</span>
       </a>
       <div class="header-actions">
+        <button class="accessibility-button calm-sound-button" type="button" id="calm-sound-button" aria-pressed="true" aria-label="Turn off calm background sound">
+          <span aria-hidden="true">🎵</span><span class="accessibility-label calm-sound-label">Calm sound</span>
+        </button>
         <button class="accessibility-button" type="button" data-open-accessibility aria-label="Open accessibility options">
           <span aria-hidden="true">Aa</span><span class="accessibility-label">Accessibility</span>
         </button>
@@ -115,11 +118,26 @@
         </div>
       </section>
 
+      <section class="quiet-tools journal-invite" aria-labelledby="journal-invite-title">
+        <div class="quiet-tools-heading">
+          <p class="step-label">A private place to write</p>
+          <h2 id="journal-invite-title">Your journal.</h2>
+          <p>Vent freely. By default nothing is saved here either - you choose if and when to keep an entry.</p>
+        </div>
+        <button class="tool-card tool-card-journal" type="button" data-open-journal>
+          <span class="tool-art journal-art" aria-hidden="true">✎</span>
+          <span class="tool-time">As long as you need</span>
+          <span class="tool-title">Open your journal</span>
+          <span class="tool-copy">Write it out, then keep it privately or let it go completely.</span>
+          <span class="tool-arrow" aria-hidden="true">→</span>
+        </button>
+      </section>
+
       <section class="promise" aria-label="Our promise">
         <div class="promise-star" aria-hidden="true">✦</div>
         <div>
           <p class="step-label">Our promise</p>
-          <p>This is a non-clinical space for reflection and support. You are always in control of what you share, and you can leave any path at any time. <button class="inline-button" type="button" data-open-privacy>How privacy works</button> <span aria-hidden="true">·</span> <button class="inline-button" type="button" data-open-resources>Find more support</button></p>
+          <p>This is a non-clinical space for reflection and support. You are always in control of what you share, and you can leave any path at any time. <span class="promise-links"><button class="inline-button" type="button" data-open-privacy>How privacy works</button> <span aria-hidden="true">·</span> <button class="inline-button" type="button" data-open-resources>Find more support</button></span></p>
         </div>
       </section>
     </main>
@@ -225,6 +243,11 @@
       </div>
       <label class="toggle-row"><span><span class="settings-label">Higher contrast</span><span class="settings-help">Make boundaries and text more distinct.</span></span><input type="checkbox" data-setting="contrast" /></label>
       <label class="toggle-row"><span><span class="settings-label">Reduce motion</span><span class="settings-help">Minimize movement and animation.</span></span><input type="checkbox" data-setting="motion" /></label>
+      <label class="toggle-row"><span><span class="settings-label">Calm background sound</span><span class="settings-help">A soft, synthesized ambient tone. Starts quietly as soon as you interact with the page; you can turn it off anytime.</span></span><input type="checkbox" id="calm-sound-toggle" data-setting="calmSound" /></label>
+      <div class="settings-row">
+        <div><span class="settings-label">Sound volume</span><span class="settings-help">How loud the calm background sound plays.</span></div>
+        <input type="range" id="calm-sound-volume" min="0" max="100" value="22" aria-label="Calm background sound volume" />
+      </div>
     </dialog>
 
     <dialog class="privacy-dialog" id="privacy-dialog" aria-labelledby="privacy-title">
@@ -268,6 +291,51 @@
       <label class="consent-row delete-space-confirm" hidden><input type="checkbox" data-confirm-delete-space /> <span>I understand that deleting this private space removes its anonymous account and cannot be undone.</span></label>
       <button class="secondary-button delete-space-button" type="button" data-delete-private-space hidden>Delete my private space</button>
       <p class="form-status" id="private-space-status" role="status" aria-live="polite"></p>
+    </dialog>
+
+    <dialog class="journal-dialog" id="journal-dialog" aria-labelledby="journal-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-dialog>×</button>
+      <p class="step-label">A private place to write</p>
+      <h2 id="journal-title">Your journal</h2>
+      <p>Write as much or as little as you want. By default this is just a vent - nothing is saved unless you choose to save it, and we never read what you write unless you choose to share it with the team yourself.</p>
+      <div class="journal-writer">
+        <span class="journal-pencil" id="journal-pencil" aria-hidden="true">✎</span>
+        <textarea id="journal-entry" class="journal-textarea" rows="8" placeholder="Start writing…" aria-label="Journal entry"></textarea>
+      </div>
+      <div class="journal-tools-row">
+        <button class="secondary-button journal-voice-button" type="button" id="journal-voice-button" hidden>🎙 Start voice typing</button>
+        <button class="text-button journal-sound-toggle" type="button" id="journal-sound-toggle" aria-pressed="true">🔊 Writing sound on</button>
+      </div>
+      <p class="journal-voice-note" id="journal-voice-note" hidden>Voice typing uses your browser's built-in dictation. On some browsers this sends audio to your browser or device maker's speech service to turn it into text - it is not covered by In Göd Hands' own no-recording promise for writing and Honey messages.</p>
+      <div class="dialog-actions journal-actions">
+        <button class="secondary-button" type="button" data-clear-journal>Clear without saving</button>
+        <button class="primary-button" type="button" id="journal-save-button">Save privately <span aria-hidden="true">→</span></button>
+      </div>
+      <p class="form-status" id="journal-status" role="status" aria-live="polite"></p>
+
+      <section class="journal-locked" id="journal-locked" hidden>
+        <h3>Want to save entries?</h3>
+        <p>Saving needs an optional private space - a random technical identity with no personal information required. <button class="inline-button" type="button" id="journal-open-privacy">Learn more or create one</button></p>
+      </section>
+
+      <section class="journal-entries" id="journal-entries" hidden aria-labelledby="journal-entries-title">
+        <div class="journal-entries-heading">
+          <h3 id="journal-entries-title">Saved entries</h3>
+          <button class="text-button" type="button" id="journal-erase-button">Erase all entries</button>
+        </div>
+        <div class="journal-entry-list" id="journal-entry-list"></div>
+      </section>
+    </dialog>
+
+    <dialog class="confirm-dialog" id="journal-confirm-dialog" aria-labelledby="journal-confirm-title">
+      <button class="dialog-close" type="button" aria-label="Close" data-close-confirm>×</button>
+      <p class="step-label">Unsaved writing</p>
+      <h2 id="journal-confirm-title">Leave without saving?</h2>
+      <p class="confirm-copy">You have words written in your journal. If you close now without saving, this entry will be erased.</p>
+      <div class="dialog-actions confirm-actions">
+        <button class="secondary-button" type="button" id="journal-discard-close-button">Erase &amp; close</button>
+        <button class="primary-button" type="button" id="journal-keep-writing-button">Keep writing <span aria-hidden="true">→</span></button>
+      </div>
     </dialog>
 
     <dialog class="resources-dialog" id="resources-dialog" aria-labelledby="resources-title">
