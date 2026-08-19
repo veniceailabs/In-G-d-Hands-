@@ -178,13 +178,17 @@ html[data-theme="dark"] .completion-choices button:hover, html[data-theme="dark"
 .settings-row, .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.3rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
 .toggle-row { cursor: pointer; }
 .consent-row input { width: 1.2rem; height: 1.2rem; accent-color: var(--deep); flex: 0 0 auto; }
-.toggle-row input[type="checkbox"] { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 2.6rem; height: 1.5rem; margin: 0; border-radius: 999px; border: 1px solid var(--line); background: rgba(41, 51, 65, .12); position: relative; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
-.toggle-row input[type="checkbox"]::before { content: ""; position: absolute; top: 1px; left: 1px; width: 1.28rem; height: 1.28rem; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .15s ease; }
-.toggle-row input[type="checkbox"]:checked { background: var(--deep); border-color: var(--deep); }
-html[data-theme="dark"] .toggle-row input[type="checkbox"] { background: rgba(218, 237, 241, .16); }
-html[data-theme="dark"] .toggle-row input[type="checkbox"]::before { background: #102129; }
-.toggle-row input[type="checkbox"]:checked::before { transform: translateX(1.1rem); }
-.toggle-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.toggle-row input[type="checkbox"] { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 2.8rem; height: 1.6rem; margin: 0; border-radius: 999px; border: 2px solid rgba(0,0,0,.18); background: rgba(41,51,65,.14); position: relative; cursor: pointer; transition: background .18s ease, border-color .18s ease; vertical-align: middle; }
+.toggle-row input[type="checkbox"]::before { content: ""; position: absolute; top: 50%; left: 2px; transform: translateY(-50%); width: 1.15rem; height: 1.15rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.32); transition: left .18s ease; }
+.toggle-row input[type="checkbox"]:checked { background: #2d6a7a; border-color: #2d6a7a; }
+.toggle-row input[type="checkbox"]:checked::before { left: calc(100% - 1.15rem - 2px); }
+html[data-theme="dark"] .toggle-row input[type="checkbox"] { background: rgba(218,237,241,.18); border-color: rgba(255,255,255,.22); }
+html[data-theme="dark"] .toggle-row input[type="checkbox"]::before { background: #c8dfe5; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+html[data-theme="dark"] .toggle-row input[type="checkbox"]:checked { background: #3a8fa2; border-color: #3a8fa2; }
+html[data-theme="dark"] .toggle-row input[type="checkbox"]:checked::before { background: #fff; }
+html[data-reduced-motion="true"] .toggle-row input[type="checkbox"],
+html[data-reduced-motion="true"] .toggle-row input[type="checkbox"]::before { transition: none !important; }
+.toggle-row input[type="checkbox"]:focus-visible { outline: 3px solid #2d6a7a; outline-offset: 2px; }
 .stepper { display: flex; gap: .6rem; align-items: center; white-space: nowrap; }
 .stepper button { border: 1px solid var(--line); border-radius: .55rem; background: transparent; color: var(--deep); padding: .35rem .5rem; font-weight: 700; }
 .stepper span { min-width: 3.8rem; color: var(--muted); font-size: .8rem; text-align: center; }
@@ -337,3 +341,64 @@ html[data-high-contrast="true"] .tour-target-highlight { outline: 3px solid curr
 
 /* ─── Tour: screen-reader only utility (shared with .sr-only if not already defined) ─── */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ═══════════════════════════════════════════════════════
+   HONEY ANIMATED TOUR FACES
+   data-face attribute on .tour-tooltip-bear drives the expression.
+   All animations are skipped when reduced-motion is on.
+   ═══════════════════════════════════════════════════════ */
+
+/* Base bear in the tooltip is larger */
+.tour-tooltip-bear { display: flex; align-items: center; flex-shrink: 0; }
+.tour-tooltip-bear .bear-mark { width: 3.2rem; height: 2.9rem; transition: transform .3s ease; }
+.tour-tooltip-bear .bear-ears i { background: #d4904e; }
+.tour-tooltip-bear .bear-face { background: #f0c87a; }
+
+/* Face: wave — tilts and bobs the head */
+@keyframes honey-wave { 0%,100% { transform: rotate(-8deg) translateY(0); } 40% { transform: rotate(12deg) translateY(-3px); } 70% { transform: rotate(-6deg) translateY(-1px); } }
+.tour-tooltip-bear[data-face="wave"] .bear-mark { animation: honey-wave 1.1s ease-in-out 1 forwards; }
+
+/* Face: smile — no animation, just a wide smile via bear-face i */
+.tour-tooltip-bear[data-face="smile"] .bear-face i { width: .52rem; height: .36rem; border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%; background: #76503c; bottom: .22rem; }
+
+/* Face: think — bear glances up */
+@keyframes honey-think { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-6deg) translateX(-2px); } }
+.tour-tooltip-bear[data-face="think"] .bear-mark { animation: honey-think 1.8s ease-in-out infinite; }
+/* Eyes look left */
+.tour-tooltip-bear[data-face="think"] .bear-face::before { box-shadow: .38rem 0 #543c2d; }
+
+/* Face: happy — bouncy */
+@keyframes honey-bounce { 0%,100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-5px) scale(1.06); } 60% { transform: translateY(-2px) scale(1.03); } }
+.tour-tooltip-bear[data-face="happy"] .bear-mark { animation: honey-bounce 0.9s ease-in-out 2 forwards; }
+.tour-tooltip-bear[data-face="happy"] .bear-face i { width: .58rem; height: .4rem; border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%; background: #76503c; }
+.tour-tooltip-bear[data-face="happy"] .bear-face { background: #f5d07e; }
+
+/* Face: breathe — gentle slow inhale/exhale scale */
+@keyframes honey-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.09); } }
+.tour-tooltip-bear[data-face="breathe"] .bear-mark { animation: honey-breathe 3.5s ease-in-out infinite; }
+
+/* Face: cozy — slight tilt, eyes half-closed (dot shrinks) */
+@keyframes honey-cozy { 0%,100% { transform: rotate(6deg); } 50% { transform: rotate(9deg); } }
+.tour-tooltip-bear[data-face="cozy"] .bear-mark { animation: honey-cozy 2.5s ease-in-out infinite; }
+.tour-tooltip-bear[data-face="cozy"] .bear-face::before { width: .12rem; height: .12rem; box-shadow: .57rem 0 0 #543c2d; }
+
+/* Face: nod — gentle up-down nod */
+@keyframes honey-nod { 0%,100% { transform: translateY(0); } 30% { transform: translateY(-3px); } 60% { transform: translateY(1px); } }
+.tour-tooltip-bear[data-face="nod"] .bear-mark { animation: honey-nod 1s ease-in-out 3 forwards; }
+
+/* Face: wink — one eye blinks */
+@keyframes honey-wink { 0%,35%,65%,100% { transform: scaleY(1); } 50% { transform: scaleY(.1); } }
+.tour-tooltip-bear[data-face="wink"] .bear-face::after { content: ""; position: absolute; width: .18rem; height: .18rem; background: #543c2d; border-radius: 50%; top: .38rem; left: .44rem; transform-origin: center; animation: honey-wink 1.6s ease-in-out 2 forwards; }
+
+/* Face: care — soft glow pulse around the whole bear */
+@keyframes honey-care { 0%,100% { filter: drop-shadow(0 0 0px transparent); } 50% { filter: drop-shadow(0 0 8px rgba(210, 150, 80, .6)); } }
+.tour-tooltip-bear[data-face="care"] .bear-mark { animation: honey-care 2s ease-in-out infinite; }
+.tour-tooltip-bear[data-face="care"] .bear-face { background: #f5c07a; }
+
+/* Disable all Honey animations when reduced-motion is on */
+html[data-reduced-motion="true"] .tour-tooltip-bear .bear-mark,
+html[data-reduced-motion="true"] .tour-tooltip-bear .bear-face::after { animation: none !important; transform: none !important; filter: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .tour-tooltip-bear .bear-mark,
+  .tour-tooltip-bear .bear-face::after { animation: none !important; transform: none !important; filter: none !important; }
+}

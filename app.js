@@ -1253,46 +1253,55 @@ const TOUR_STEPS = [
     selector: '.site-header',
     title: 'Welcome to In Göd Hands',
     body: 'This is the header. At the top you\'ll find the calm sound toggle (🎵), the Accessibility panel (Aa) where you can adjust text size, contrast, motion, and colour — and an Urgent support button if you ever need immediate help.',
+    face: 'wave',
   },
   {
     selector: '.check-in',
     title: 'Check in with yourself',
     body: 'Start by choosing how you\'re feeling right now. Tap or click a card — Anxious, Overwhelmed, Disconnected, Tired, or "I\'m not sure." Each one opens a set of gentle next steps chosen just for that feeling.',
+    face: 'smile',
   },
   {
     selector: '[data-open-reflection]',
     title: 'Put words to it',
     body: 'If you\'d rather write a sentence or two first, use this link. A small private text box opens — nothing you write is sent or saved anywhere outside your browser.',
+    face: 'think',
   },
   {
     selector: '.bear-launcher.mobile-chat-launcher, .bear-launcher.desktop-chat-launcher',
     title: 'Talk with me — Honey',
     body: 'I\'m always here in the corner. Tap or click the bear icon to open a gentle chat. I can help you slow down, think through what you need, or connect you with the team. I\'m not a therapist and this isn\'t emergency support — just a quiet companion.',
+    face: 'happy',
   },
   {
     selector: '.quiet-tools:not(.journal-invite)',
     title: 'Quiet private practices',
     body: 'These three tools work completely inside your browser — nothing is saved or sent. Try a 1-minute breathing exercise, a 5-4-3-2-1 grounding check-in, or a free-write brain dump to get thoughts out of your head.',
+    face: 'breathe',
   },
   {
     selector: '.journal-invite',
     title: 'Your private journal',
     body: 'Your journal is a safe, private space to write freely. By default nothing is saved — you decide whether to keep an entry. You can also use voice typing if your browser supports it.',
+    face: 'cozy',
   },
   {
     selector: '.promise',
     title: 'Our promise to you',
     body: 'You\'ll always find the privacy policy and extra resources here. No account or personal information is ever required to use the check-in, practices, or chat with me.',
+    face: 'nod',
   },
   {
     selector: '[data-open-accessibility]',
     title: 'Accessibility options',
     body: 'Tap the "Aa" button anytime to adjust text size, switch between Light and Dark mode, enable High Contrast, reduce motion, or control the 432 Hz calm sound. All settings are stored only on your device.',
+    face: 'wink',
   },
   {
     selector: '[data-open-urgent]',
     title: 'Urgent support — always visible',
     body: 'If you or someone else is in immediate danger, this button is always in the header. It opens a direct link to find verified crisis helplines near you by country. Please reach out — you don\'t have to be alone.',
+    face: 'care',
   },
 ];
 
@@ -1310,32 +1319,54 @@ function tourClearHighlight() {
   }
 }
 
+/* ── Honey face animator ──
+   Each tour step has a named expression. We render it by setting a data-face
+   attribute on the tooltip bear, which CSS keyframes and pseudo-elements pick up.
+   When reduced-motion is enabled we skip all animation and just show the base face. */
+function tourSetFace(face) {
+  const bearEl = tourTooltip?.querySelector('.tour-tooltip-bear');
+  if (!bearEl) return;
+  bearEl.dataset.face = face || 'smile';
+}
+
+/* ── Fixed tooltip positioning ──
+   Uses double requestAnimationFrame so the tooltip has fully reflowed (content
+   changed + scrollIntoView settled) before we measure its actual dimensions. */
 function tourPositionTooltip(targetEl) {
   if (!targetEl || !tourTooltip) return;
-  const rect = targetEl.getBoundingClientRect();
-  const tooltipW = tourTooltip.offsetWidth || 440;
-  const tooltipH = tourTooltip.offsetHeight || 220;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const margin = 12;
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      const rect = targetEl.getBoundingClientRect();
+      const tooltipW = tourTooltip.getBoundingClientRect().width || 440;
+      const tooltipH = tourTooltip.getBoundingClientRect().height || 220;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const margin = 14;
 
-  let top, left;
+      let top;
+      // Prefer below, then above, then centred in viewport
+      if (rect.bottom + tooltipH + margin <= vh) {
+        top = rect.bottom + margin;
+      } else if (rect.top - tooltipH - margin >= 0) {
+        top = rect.top - tooltipH - margin;
+      } else {
+        // Target fills most of viewport — centre the tooltip
+        top = Math.max(margin, Math.round((vh - tooltipH) / 2));
+      }
 
-  if (rect.bottom + tooltipH + margin < vh) {
-    top = rect.bottom + margin;
-  } else if (rect.top - tooltipH - margin > 0) {
-    top = rect.top - tooltipH - margin;
-  } else {
-    top = Math.max(margin, Math.min(rect.top, vh - tooltipH - margin));
-  }
+      // Clamp vertically
+      top = Math.max(margin, Math.min(top, vh - tooltipH - margin));
 
-  left = rect.left + rect.width / 2 - tooltipW / 2;
-  left = Math.max(margin, Math.min(left, vw - tooltipW - margin));
+      // Centre horizontally over target, clamped inside viewport
+      let left = rect.left + rect.width / 2 - tooltipW / 2;
+      left = Math.max(margin, Math.min(left, vw - tooltipW - margin));
 
-  tourTooltip.style.top = `${top}px`;
-  tourTooltip.style.left = `${left}px`;
-  tourTooltip.style.bottom = 'auto';
-  tourTooltip.style.right = 'auto';
+      tourTooltip.style.top = `${Math.round(top)}px`;
+      tourTooltip.style.left = `${Math.round(left)}px`;
+      tourTooltip.style.bottom = 'auto';
+      tourTooltip.style.right = 'auto';
+    });
+  });
 }
 
 function tourShowStep(index) {
@@ -1343,7 +1374,7 @@ function tourShowStep(index) {
   tourCurrentStep = Math.max(0, Math.min(index, TOUR_STEPS.length - 1));
   const step = TOUR_STEPS[tourCurrentStep];
 
-  // Resolve selector — some steps have a comma-separated fallback
+  // Resolve selector — steps may have a comma-separated fallback
   const selectors = step.selector.split(',').map((s) => s.trim());
   let targetEl = null;
   for (const sel of selectors) {
@@ -1354,22 +1385,14 @@ function tourShowStep(index) {
   // Clear previous highlight
   tourClearHighlight();
 
-  // Highlight target
-  if (targetEl) {
-    tourHighlightedEl = targetEl;
-    targetEl.classList.add('tour-target-highlight');
-    targetEl.scrollIntoView({ block: 'nearest', behavior: preferences.motion ? 'auto' : 'smooth' });
-  }
-
-  // Update tooltip content
+  // Update tooltip content first (so it can reflow before positioning)
   if (tourStepCounter) tourStepCounter.textContent = `Step ${tourCurrentStep + 1} of ${TOUR_STEPS.length}`;
   if (tourTitle) tourTitle.textContent = step.title;
   if (tourBody) tourBody.textContent = step.body;
+  tourSetFace(step.face);
 
-  // Show/hide prev button
+  // Prev / Next button state
   if (tourPrevBtn) tourPrevBtn.hidden = tourCurrentStep === 0;
-
-  // Update next button label on last step
   if (tourNextBtn) {
     if (tourCurrentStep === TOUR_STEPS.length - 1) {
       tourNextBtn.textContent = 'Finish ✓';
@@ -1380,8 +1403,17 @@ function tourShowStep(index) {
     }
   }
 
-  // Position tooltip over target
-  window.requestAnimationFrame(() => { tourPositionTooltip(targetEl); });
+  // Highlight and scroll target into view, then position tooltip after settle
+  if (targetEl) {
+    tourHighlightedEl = targetEl;
+    targetEl.classList.add('tour-target-highlight');
+    const scrollBehavior = preferences.motion ? 'auto' : 'smooth';
+    targetEl.scrollIntoView({ block: 'center', behavior: scrollBehavior });
+  }
+
+  // Wait for scroll + content reflow before measuring
+  const positionDelay = preferences.motion ? 50 : 380;
+  window.setTimeout(() => { tourPositionTooltip(targetEl); }, positionDelay);
 
   // Announce to screen readers
   if (tourLive) {
@@ -1391,8 +1423,8 @@ function tourShowStep(index) {
     }, 80);
   }
 
-  // Focus the tooltip for keyboard users
-  window.setTimeout(() => { if (tourNextBtn) tourNextBtn.focus(); }, 120);
+  // Focus the Next button for keyboard users
+  window.setTimeout(() => { if (tourNextBtn) tourNextBtn.focus(); }, 140);
 }
 
 function startTour() {
@@ -1400,7 +1432,7 @@ function startTour() {
   tourActive = true;
   tourCurrentStep = 0;
 
-  // Hide invite strip if visible
+  // Hide invite strip
   if (tourInvite) tourInvite.hidden = true;
 
   // Show overlay and tooltip
@@ -1419,9 +1451,7 @@ function endTour() {
   if (tourTooltip) tourTooltip.hidden = true;
   if (tourInvite) tourInvite.hidden = true;
 
-  if (tourLive) {
-    tourLive.textContent = 'Tour ended. You can restart it anytime from the Accessibility panel.';
-  }
+  if (tourLive) tourLive.textContent = 'Tour ended. You can restart it anytime from the Accessibility panel.';
 }
 
 // Wire up tour buttons
@@ -1430,21 +1460,15 @@ if (tourNextBtn) {
     if (tourCurrentStep >= TOUR_STEPS.length - 1) { endTour(); } else { tourShowStep(tourCurrentStep + 1); }
   });
 }
-if (tourPrevBtn) {
-  tourPrevBtn.addEventListener('click', () => { tourShowStep(tourCurrentStep - 1); });
-}
-if (tourEndBtn) {
-  tourEndBtn.addEventListener('click', endTour);
-}
+if (tourPrevBtn) tourPrevBtn.addEventListener('click', () => { tourShowStep(tourCurrentStep - 1); });
+if (tourEndBtn) tourEndBtn.addEventListener('click', endTour);
 
-// Overlay click ends tour (click outside tooltip)
+// Overlay click ends tour
 if (tourOverlay) {
-  tourOverlay.addEventListener('click', (event) => {
-    if (event.target === tourOverlay) endTour();
-  });
+  tourOverlay.addEventListener('click', (event) => { if (event.target === tourOverlay) endTour(); });
 }
 
-// Keyboard navigation during tour (Escape to end, ArrowRight/ArrowLeft to step)
+// Keyboard navigation: Arrow keys step, Escape ends
 document.addEventListener('keydown', (event) => {
   if (!tourActive) return;
   if (event.key === 'Escape') { event.preventDefault(); endTour(); }
@@ -1452,7 +1476,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') { event.preventDefault(); if (tourCurrentStep > 0) tourShowStep(tourCurrentStep - 1); }
 });
 
-// Reposition tooltip on resize/scroll
+// Reposition on resize
 window.addEventListener('resize', () => {
   if (!tourActive) return;
   const step = TOUR_STEPS[tourCurrentStep];
@@ -1465,10 +1489,7 @@ window.addEventListener('resize', () => {
 // Invite strip buttons
 if (tourInviteStart) tourInviteStart.addEventListener('click', startTour);
 if (tourInviteSkip) {
-  tourInviteSkip.addEventListener('click', () => {
-    tourMarkSeen();
-    if (tourInvite) tourInvite.hidden = true;
-  });
+  tourInviteSkip.addEventListener('click', () => { tourMarkSeen(); if (tourInvite) tourInvite.hidden = true; });
 }
 
 // Re-launch from accessibility panel
@@ -1479,7 +1500,7 @@ if (tourLaunchButton) {
   });
 }
 
-// Show invite on first visit (only after a short delay for composure)
+// Show invite on first visit after a short composure delay
 if (!tourReadTourSeen()) {
   window.setTimeout(() => {
     if (tourInvite) tourInvite.hidden = false;
