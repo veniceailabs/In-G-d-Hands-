@@ -18,7 +18,7 @@ async function verifyTurnstile(token, request, secret) {
 }
 
 export default async function handler(request, response) {
-  if (!['POST', 'DELETE'].includes(request.method)) return reply(response, 405, { error: 'Method not allowed.' });
+  if (!['GET', 'POST', 'DELETE'].includes(request.method)) return reply(response, 405, { error: 'Method not allowed.' });
 
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, TURNSTILE_SECRET_KEY } = process.env;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !TURNSTILE_SECRET_KEY) {
@@ -28,6 +28,17 @@ export default async function handler(request, response) {
   const authUrl = `${SUPABASE_URL.replace(/\/$/, '')}/auth/v1`;
 
   try {
+    if (request.method === 'GET') {
+      const accessToken = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+      if (!accessToken) return reply(response, 401, { error: 'Your private-space session is missing.' });
+      const userResponse = await fetch(`${authUrl}/user`, {
+        headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${accessToken}` },
+      });
+      const user = await userResponse.json().catch(() => ({}));
+      if (!userResponse.ok || !user.id) return reply(response, 403, { error: 'Invalid or expired session.' });
+      return reply(response, 200, { space: { id: user.id, created_at: user.created_at } });
+    }
+
     if (request.method === 'DELETE') {
       const accessToken = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
       if (!accessToken) return reply(response, 401, { error: 'Your private-space session is missing. Open this space in the same browser session to delete it.' });

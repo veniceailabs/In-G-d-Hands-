@@ -129,11 +129,13 @@ dialog::backdrop { background: rgba(19, 40, 48, .45); backdrop-filter: blur(4px)
 .dialog-orb { width: 8rem; height: 8rem; border-radius: 50%; background: #c5e2dd; position: absolute; right: -2rem; top: -2rem; z-index: -1; }
 .support-reflection { color: var(--muted); font-size: 1.04rem; max-width: 470px; margin-bottom: 1.6rem; }
 .support-options { display: grid; gap: .75rem; }
+.support-orient { background: #fdfaf4; border: 1px solid #e8decb; padding: 1rem 1.15rem; border-radius: 1rem; color: #76503c; font-size: .95rem; margin-bottom: 1.25rem; font-weight: 500; }
 .support-option { text-align: left; padding: 1rem 1.05rem; border: 1px solid var(--line); border-radius: 1rem; background: #fff; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .85rem; color: var(--ink); }
 .support-option:hover { border-color: #90b8bd; background: #f6fbfa; }
 .option-time { font-size: .72rem; font-weight: 700; color: #8e6153; text-transform: uppercase; letter-spacing: .06em; }
 .option-title { color: var(--deep); font-weight: 700; display: block; }
 .option-copy { color: var(--muted); font-size: .85rem; display: block; }
+.option-reason { display: block; color: #6b8287; font-size: .82rem; font-style: italic; margin-top: .4rem; line-height: 1.35; }
 .option-arrow { color: var(--coral); font-size: 1.3rem; }
 .secondary-button { margin-top: 1.35rem; padding: .65rem 0; text-decoration: underline; text-underline-offset: .3rem; font-weight: 700; }
 label { display: block; color: var(--deep); font-weight: 700; margin: 1.25rem 0 .5rem; }
@@ -176,6 +178,10 @@ html[data-theme="dark"] .completion-choices button:hover, html[data-theme="dark"
 .segmented-control button { color: var(--ink); background: transparent; border: 0; border-radius: .65rem; padding: .5rem .7rem; font-weight: 700; }
 .segmented-control button[aria-pressed="true"] { background: var(--deep); color: var(--surface); }
 .settings-row, .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.3rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+.sound-type-grid { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .75rem; }
+.sound-type-btn { border: 1px solid var(--line); border-radius: 2rem; background: transparent; padding: .45rem .85rem; font-size: .82rem; font-weight: 700; color: var(--ink); }
+.sound-type-btn:hover { border-color: #7ba8a9; background: #eef6f4; }
+.sound-type-btn[aria-pressed="true"] { background: var(--deep); border-color: var(--deep); color: white; }
 .toggle-row { cursor: pointer; }
 .consent-row input { width: 1.2rem; height: 1.2rem; accent-color: var(--deep); flex: 0 0 auto; }
 .toggle-row input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }

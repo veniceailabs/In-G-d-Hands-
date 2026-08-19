@@ -1,45 +1,51 @@
 const supportPaths = {
   anxious: {
+    orient: 'When thoughts feel loud, a short pause can create just enough distance to breathe.',
     reflection: 'It makes sense to want a little more steadiness. Would one of these feel supportive?',
     options: [
-      ['breathe', '1 min', 'A slow reset', 'Let your breath settle into a kinder rhythm.'],
-      ['ground', '2 min', 'Ground in the room', 'Notice a few simple things around you.'],
-      ['next', '2 min', 'Make space for the next thing', 'Choose one gentle action before you continue.'],
+      ['breathe', '1 min', 'A slow reset', 'Let your breath settle into a kinder rhythm.', 'Slow breathing activates the body\'s natural calm response and can quiet a racing mind within minutes.'],
+      ['ground', '2 min', 'Ground in the room', 'Notice a few simple things around you.', 'Grounding exercises gently redirect attention outward, which can interrupt anxious thought loops.'],
+      ['next', '2 min', 'Make space for the next thing', 'Choose one gentle action before you continue.', 'Naming one small, possible step gives a busy mind something concrete to hold onto.'],
     ],
   },
   overwhelmed: {
-    reflection: 'You do not have to solve everything right now. Let’s make room for one manageable step.',
+    orient: 'Feeling overwhelmed often means you are carrying more than anyone should carry alone. These tools are here to make one small corner feel a little lighter, not to fix everything.',
+    reflection: 'You do not have to solve everything right now. Let\'s make room for one manageable step.',
     options: [
-      ['brain-dump', '3 min', 'A simple brain-dump', 'Put down what is circling in your mind.'],
-      ['next', '2 min', 'One next step', 'Name one thing that would ease the weight a little.'],
-      ['breathe', '1 min', 'A slow reset', 'Make one small pocket of space.'],
+      ['brain-dump', '3 min', 'A simple brain-dump', 'Put down what is circling in your mind.', 'Getting thoughts out of your head and onto a page can immediately reduce the mental pressure of holding everything at once.'],
+      ['movement', '2 min', 'A gentle body shift', 'Release some tension with a small, easy movement.', 'When we\'re overwhelmed, physical tension builds without our noticing. A gentle movement can offer unexpected relief.'],
+      ['breathe', '1 min', 'A slow reset', 'Make one small pocket of space.', 'Slow breathing activates the body\'s natural calm response and can quiet a racing mind within minutes.'],
     ],
   },
   lonely: {
+    orient: 'Loneliness and disconnection are among the most common human experiences, and often among the quietest to name. You\'re not alone in feeling this.',
     reflection: 'Wanting connection is deeply human. You can take this at your own pace.',
     options: [
-      ['connection', '2 min', 'Write a warm message', 'Make a draft for someone you trust - you decide whether to send it.'],
-      ['ground', '2 min', 'Feel a little less alone', 'Let the room remind you that you are here.'],
-      ['next', '5 min', 'Find your support circle', 'Choose one person or place that could feel caring.'],
+      ['check-in', '5 min', 'Request a human check-in', 'Connect with our team when you want someone to listen.', 'Sometimes nothing replaces a real person. A team check-in lets you share what\'s on your mind at a pace that feels right.'],
+      ['connection', '2 min', 'Write a warm message', 'Make a draft for someone you trust. You decide whether to send it.', 'Preparing words in private first can make reaching out feel much less daunting.'],
+      ['ground', '2 min', 'Feel a little less alone', 'Let the room remind you that you are here.', 'Grounding in your immediate surroundings can soften the feeling of isolation, even briefly.'],
     ],
   },
   tired: {
+    orient: 'Exhaustion is your body and mind signalling that something matters and has been given a lot. These are small options, and none of them require more than you have right now.',
     reflection: 'You have been carrying a lot. Rest does not need to be earned.',
     options: [
-      ['rest', '2 min', 'A permission slip to pause', 'Let yourself stop for one small breath.'],
-      ['movement', '2 min', 'Make one gentle shift', 'Move in whatever small way feels comfortable for your body.'],
-      ['next', '2 min', 'Protect your remaining energy', 'Choose one gentle boundary for today.'],
+      ['rest', '2 min', 'A permission slip to pause', 'Let yourself stop for one small breath.', 'Sometimes what we need most is explicit permission to stop, even just for a minute.'],
+      ['movement', '2 min', 'Make one gentle shift', 'Move in whatever small way feels comfortable for your body.', 'A small physical shift, like softening your shoulders or unclenching a hand, can signal safety to a tired nervous system.'],
+      ['next', '2 min', 'Protect your remaining energy', 'Choose one gentle boundary for today.', 'Identifying one thing you can set aside protects the energy you still have.'],
     ],
   },
   unsure: {
+    orient: 'Not knowing exactly what you\'re feeling is completely valid. You don\'t need to name it perfectly to find something that helps.',
     reflection: 'You do not need the perfect words. We can begin with what feels most possible.',
     options: [
-      ['breathe', '1 min', 'Arrive where you are', 'A simple pause to notice your body and breath.'],
-      ['ground', '2 min', 'Follow a gentle prompt', 'Bring your attention back to the present.'],
-      ['brain-dump', '5 min', 'Explore a small support menu', 'Give a few words to what has been with you.'],
+      ['breathe', '1 min', 'Arrive where you are', 'A simple pause to notice your body and breath.', 'Breathing is always a safe place to start when you\'re unsure where to begin.'],
+      ['ground', '2 min', 'Follow a gentle prompt', 'Bring your attention back to the present.', 'Grounding gently anchors awareness in the present moment, which can make whatever you\'re feeling more manageable.'],
+      ['brain-dump', '5 min', 'Explore a small support menu', 'Give a few words to what has been with you.', 'Free-writing without an agenda often reveals what is most present, without needing to know it in advance.'],
     ],
   },
 };
+
 
 const root = document.documentElement;
 const connectionNotice = document.querySelector('#connection-notice');
@@ -155,7 +161,7 @@ function readPreferences() {
   try { return JSON.parse(localStorage.getItem('igh-preferences')) || {}; } catch { return {}; }
 }
 function savePreferences(next) { localStorage.setItem('igh-preferences', JSON.stringify(next)); }
-let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, anonymousFeedback: false, calmSound: true, calmVolume: 22, journalSound: true, ...readPreferences() };
+let preferences = { theme: 'system', textScale: 'default', contrast: false, motion: false, anonymousFeedback: false, calmSound: true, soundType: 'handpan', calmVolume: 22, journalSound: true, ...readPreferences() };
 
 function readPrivateSpace() {
   try { return JSON.parse(sessionStorage.getItem('igh-private-space') || 'null'); } catch { return null; }
@@ -202,6 +208,7 @@ function applyPreferences() {
   document.querySelector('#text-size-status').textContent = preferences.textScale === 'default' ? 'Default' : preferences.textScale === 'large' ? 'Large' : 'Largest';
   calmSoundToggle.checked = preferences.calmSound;
   calmSoundVolumeSlider.value = String(preferences.calmVolume);
+  document.querySelectorAll('.sound-type-btn').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.soundType === preferences.soundType)));
   calmSoundButton.setAttribute('aria-pressed', String(preferences.calmSound));
   calmSoundButton.setAttribute('aria-label', preferences.calmSound ? 'Turn off calm background sound' : 'Turn on calm background sound');
   if (calmMasterGain && calmAudioContext) {
@@ -216,6 +223,21 @@ function applyPreferences() {
 }
 applyPreferences();
 updatePrivateSpaceControls();
+
+document.querySelectorAll('.sound-type-btn').forEach((button) => {
+  button.addEventListener('click', () => {
+    preferences.soundType = button.dataset.soundType;
+    if (!preferences.calmSound) {
+      preferences.calmSound = true;
+      startCalmSound();
+    } else if (calmSoundStarted) {
+      stopCalmSound();
+      window.setTimeout(startCalmSound, 50);
+    }
+    savePreferences(preferences);
+    applyPreferences();
+  });
+});
 
 function updateConnectionNotice() {
   connectionNotice.hidden = navigator.onLine;
@@ -236,11 +258,17 @@ if ('serviceWorker' in navigator) {
 function showSupport(state) {
   currentSupportState = state;
   const path = supportPaths[state];
+  const orientEl = document.querySelector('#support-orient');
+  if (orientEl) {
+    orientEl.textContent = path.orient || '';
+    orientEl.hidden = !path.orient;
+  }
   supportReflection.textContent = path.reflection;
-  supportOptions.replaceChildren(...path.options.map(([id, time, title, copy]) => {
+  supportOptions.replaceChildren(...path.options.map(([id, time, title, copy, reason]) => {
     const option = document.createElement('button');
     option.type = 'button'; option.className = 'support-option';
-    option.innerHTML = `<span class="option-time">${time}</span><span><span class="option-title">${title}</span><span class="option-copy">${copy}</span></span><span class="option-arrow" aria-hidden="true">→</span>`;
+    const reasonHtml = reason ? `<span class="option-reason">${reason}</span>` : '';
+    option.innerHTML = `<span class="option-time">${time}</span><span><span class="option-title">${title}</span><span class="option-copy">${copy}</span>${reasonHtml}</span><span class="option-arrow" aria-hidden="true">→</span>`;
     option.addEventListener('click', () => openPractice(id));
     return option;
   }));
@@ -310,14 +338,11 @@ function practiceLayout({ eyebrow = 'A quiet practice', title, lede, content, au
   back.type = 'button'; back.className = 'secondary-button'; back.textContent = 'Back to choices';
   back.addEventListener('click', () => { closePractice(); showSupport(currentSupportState); });
   const done = document.createElement('button');
-  done.type = 'button'; done.className = 'primary-button'; done.textContent = 'I’m done for now';
+  done.type = 'button'; done.className = 'primary-button'; done.textContent = 'I\u2019m done for now';
   done.addEventListener('click', completeMoment);
-  const reminder = document.createElement('button');
-  reminder.type = 'button'; reminder.className = 'secondary-button practice-reminder'; reminder.textContent = 'Set a private reminder';
-  reminder.addEventListener('click', openReminder);
   practiceFooter.append(back);
   addPracticeAudio(audioText);
-  practiceFooter.append(reminder, done);
+  practiceFooter.append(done);
 }
 
 function createBreathingPractice({ title = 'Breathe with the room', lede = 'Let your breath be natural. This is an invitation, not a test.' } = {}) {
@@ -418,6 +443,7 @@ function openReminder() {
 
 function openPractice(id) {
   if (supportDialog.open) supportDialog.close();
+  if (id === 'check-in') { openTeamSupport(); return; }
   currentPractice = id;
   if (id === 'breathe') createBreathingPractice();
   else if (id === 'ground') createGroundingPractice();
@@ -566,6 +592,8 @@ completionDialog.addEventListener('close', () => {
   }
 });
 document.querySelector('[data-completion-more]').addEventListener('click', () => { completionDialog.close(); showSupport(currentSupportState); });
+const completionReminderBtn = document.querySelector('#completion-reminder-btn');
+if (completionReminderBtn) completionReminderBtn.addEventListener('click', () => { completionDialog.close(); openReminder(); });
 
 document.querySelector('[data-open-accessibility]').addEventListener('click', () => accessibilityDialog.showModal());
 document.querySelector('[data-open-privacy]').addEventListener('click', () => { updatePrivateSpaceControls(); privacyDialog.showModal(); });
@@ -760,6 +788,35 @@ deletePrivateSpaceButton.addEventListener('click', async (event) => {
   } finally { button.disabled = false; }
 });
 
+const exportPrivateSpaceButton = document.querySelector('[data-export-private-space]');
+if (exportPrivateSpaceButton) {
+  exportPrivateSpaceButton.addEventListener('click', async () => {
+    const status = document.querySelector('#private-space-status');
+    const space = readPrivateSpace();
+    if (!space?.access_token) { status.textContent = 'There is no active private space in this browser session to export.'; return; }
+    exportPrivateSpaceButton.disabled = true;
+    status.textContent = 'Preparing your export\u2026';
+    try {
+      const response = await fetch('/api/private-account', { headers: { Authorization: `Bearer ${space.access_token}` } });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'We could not prepare your export right now.');
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        note: 'In G\u00f6d Hands stores only an anonymous account identifier and creation date. No wellness data, journal entries, chat messages, or personal details are ever saved to your private space.',
+        space: result.space || {},
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = 'in-god-hands-private-space-export.json';
+      document.body.append(link); link.click(); link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = 'Your export has downloaded. It contains only your anonymous account ID and creation date \u2014 nothing about what you\u2019ve written or shared.';
+    } catch (error) {
+      status.textContent = error.message || 'We could not prepare your export right now. Please try again.';
+    } finally { exportPrivateSpaceButton.disabled = false; }
+  });
+}
+
 let handpanTimer;
 const handpanScale432 = [
   144.18, // D3 (Ding center fundamental)
@@ -776,7 +833,7 @@ const handpanScale432 = [
 ];
 
 function playHandpanNote(frequency, velocity = 0.55) {
-  if (!calmAudioContext || calmAudioContext.state !== 'running' || !calmMasterGain || !preferences.calmSound) return;
+  if (!calmAudioContext || calmAudioContext.state !== 'running' || !calmMasterGain || !preferences.calmSound || preferences.soundType !== 'handpan') return;
   const ctx = calmAudioContext;
   const now = ctx.currentTime;
 
@@ -843,17 +900,18 @@ function playHandpanNote(frequency, velocity = 0.55) {
 }
 
 function scheduleNextHandpanNote() {
-  if (!calmSoundStarted || !preferences.calmSound) return;
+  if (!calmSoundStarted || !preferences.calmSound || preferences.soundType !== 'handpan') return;
   const delay = 2800 + Math.random() * 2600;
   handpanTimer = window.setTimeout(() => {
-    if (!calmSoundStarted || !preferences.calmSound) return;
+    if (!calmSoundStarted || !preferences.calmSound || preferences.soundType !== 'handpan') return;
     const idx = Math.floor(Math.random() * handpanScale432.length);
     const velocity = 0.5 + Math.random() * 0.35;
     playHandpanNote(handpanScale432[idx], velocity);
 
     if (Math.random() < 0.35) {
       window.setTimeout(() => {
-        if (!calmSoundStarted || !preferences.calmSound) return;
+        if (!calmSoundStarted || !preferences.calmSound || preferences.soundType !== 'handpan') return;
+
         const harmonyIdx = (idx + (Math.random() < 0.5 ? 2 : 4)) % handpanScale432.length;
         playHandpanNote(handpanScale432[harmonyIdx], velocity * 0.7);
       }, 280 + Math.random() * 120);
@@ -886,43 +944,72 @@ function startCalmSound() {
     calmMasterGain.gain.setValueAtTime(0, context.currentTime);
     calmMasterGain.connect(context.destination);
 
-    const filter = context.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 1100;
-    filter.connect(calmMasterGain);
+    const soundType = preferences.soundType || 'handpan';
 
-    // 432 Hz Drone Harmonizers (A2 108Hz, D3 144Hz, A3 216Hz, D4 288Hz, A4 432Hz)
-    const voices = [
-      { frequency: 108.00, level: 0.45, lfoRate: 0.03, type: 'sine' },
-      { frequency: 144.18, level: 0.48, lfoRate: 0.04, type: 'sine' },
-      { frequency: 216.00, level: 0.38, lfoRate: 0.06, type: 'sine' },
-      { frequency: 288.35, level: 0.30, lfoRate: 0.05, type: 'triangle' },
-      { frequency: 432.00, level: 0.18, lfoRate: 0.08, type: 'sine' },
-    ];
-
-    calmOscillators = voices.map(({ frequency, level, lfoRate, type }) => {
-      const oscillator = context.createOscillator();
-      oscillator.type = type || 'sine';
-      oscillator.frequency.value = frequency;
-      const voiceGain = context.createGain();
-      voiceGain.gain.setValueAtTime(level, context.currentTime);
-      const lfo = context.createOscillator();
-      lfo.frequency.value = lfoRate;
-      const lfoGain = context.createGain();
-      lfoGain.gain.setValueAtTime(level * 0.28, context.currentTime);
-      lfo.connect(lfoGain);
-      lfoGain.connect(voiceGain.gain);
-      oscillator.connect(voiceGain);
-      voiceGain.connect(filter);
-      oscillator.start();
-      lfo.start();
-      return { oscillator, lfo };
-    });
+    if (soundType === 'handpan') {
+      const filter = context.createBiquadFilter();
+      filter.type = 'lowpass'; filter.frequency.value = 1100;
+      filter.connect(calmMasterGain);
+      const voices = [
+        { frequency: 108.00, level: 0.45, lfoRate: 0.03, type: 'sine' },
+        { frequency: 144.18, level: 0.48, lfoRate: 0.04, type: 'sine' },
+        { frequency: 216.00, level: 0.38, lfoRate: 0.06, type: 'sine' },
+        { frequency: 288.35, level: 0.30, lfoRate: 0.05, type: 'triangle' },
+        { frequency: 432.00, level: 0.18, lfoRate: 0.08, type: 'sine' },
+      ];
+      calmOscillators = voices.map(({ frequency, level, lfoRate, type }) => {
+        const oscillator = context.createOscillator();
+        oscillator.type = type || 'sine'; oscillator.frequency.value = frequency;
+        const voiceGain = context.createGain(); voiceGain.gain.setValueAtTime(level, context.currentTime);
+        const lfo = context.createOscillator(); lfo.frequency.value = lfoRate;
+        const lfoGain = context.createGain(); lfoGain.gain.setValueAtTime(level * 0.28, context.currentTime);
+        lfo.connect(lfoGain); lfoGain.connect(voiceGain.gain);
+        oscillator.connect(voiceGain); voiceGain.connect(filter);
+        oscillator.start(); lfo.start();
+        return { oscillator, lfo };
+      });
+      playHandpanNote(432.00, 0.6);
+      scheduleNextHandpanNote();
+    } else {
+      const bufferSize = context.sampleRate * 2;
+      const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+      const noise = context.createBufferSource();
+      noise.buffer = buffer; noise.loop = true;
+      
+      const filter1 = context.createBiquadFilter();
+      const filter2 = context.createBiquadFilter();
+      noise.connect(filter1); filter1.connect(filter2); filter2.connect(calmMasterGain);
+      
+      let lfo = null;
+      if (soundType === 'rain') {
+        filter1.type = 'lowpass'; filter1.frequency.value = 1800; filter1.Q.value = 0.5;
+        filter2.type = 'highpass'; filter2.frequency.value = 400; filter2.Q.value = 0.5;
+      } else if (soundType === 'ocean') {
+        filter1.type = 'lowpass'; filter1.frequency.value = 500; filter1.Q.value = 0.8;
+        filter2.type = 'highpass'; filter2.frequency.value = 100;
+        lfo = context.createOscillator(); lfo.frequency.value = 0.08;
+        const lfoGain = context.createGain(); lfoGain.gain.value = 400;
+        lfo.connect(lfoGain); lfoGain.connect(filter1.frequency);
+        lfo.start();
+      } else if (soundType === 'wind') {
+        filter1.type = 'bandpass'; filter1.frequency.value = 600; filter1.Q.value = 0.8;
+        filter2.type = 'lowpass'; filter2.frequency.value = 1200;
+        lfo = context.createOscillator(); lfo.frequency.value = 0.05;
+        const lfoGain = context.createGain(); lfoGain.gain.value = 350;
+        lfo.connect(lfoGain); lfoGain.connect(filter1.frequency);
+        lfo.start();
+      } else { // whitenoise
+        filter1.type = 'lowpass'; filter1.frequency.value = 1200;
+        filter2.type = 'highpass'; filter2.frequency.value = 200;
+      }
+      noise.start();
+      calmOscillators = [{ oscillator: noise, lfo }];
+    }
 
     calmMasterGain.gain.linearRampToValueAtTime(targetVolume, context.currentTime + 1.2);
     calmSoundStarted = true;
-    playHandpanNote(432.00, 0.6);
-    scheduleNextHandpanNote();
   }).catch(() => {}).finally(() => {
     calmSoundStarting = false;
   });
@@ -1252,37 +1339,37 @@ const TOUR_STEPS = [
   {
     selector: '.site-header',
     title: 'Welcome to In Göd Hands',
-    body: 'This is the header. At the top you\'ll find the calm sound toggle (🎵), the Accessibility panel (Aa) where you can adjust text size, contrast, motion, and colour — and an Urgent support button if you ever need immediate help.',
+    body: 'This is the header. At the top you\'ll find the calm sound toggle (🎵), the Accessibility panel (Aa) where you can adjust text size, contrast, motion, and colour, and an Urgent support button if you ever need immediate help.',
     face: 'wave',
   },
   {
     selector: '.check-in',
     title: 'Check in with yourself',
-    body: 'Start by choosing how you\'re feeling right now. Tap or click a card — Anxious, Overwhelmed, Disconnected, Tired, or "I\'m not sure." Each one opens a set of gentle next steps chosen just for that feeling.',
+    body: 'Start by choosing how you\'re feeling right now. Tap or click a card: Anxious, Overwhelmed, Disconnected, Tired, or "I\'m not sure." Each one opens a set of gentle next steps chosen just for that feeling.',
     face: 'smile',
   },
   {
     selector: '[data-open-reflection]',
     title: 'Put words to it',
-    body: 'If you\'d rather write a sentence or two first, use this link. A small private text box opens — nothing you write is sent or saved anywhere outside your browser.',
+    body: 'If you\'d rather write a sentence or two first, use this link. A small private text box opens. Nothing you write is sent or saved anywhere outside your browser.',
     face: 'think',
   },
   {
     selector: '.bear-launcher.mobile-chat-launcher, .bear-launcher.desktop-chat-launcher',
-    title: 'Talk with me — Honey',
-    body: 'I\'m always here in the corner. Tap or click the bear icon to open a gentle chat. I can help you slow down, think through what you need, or connect you with the team. I\'m not a therapist and this isn\'t emergency support — just a quiet companion.',
+    title: 'Talk with Honey',
+    body: 'I\'m always here in the corner. Tap or click the bear icon to open a gentle chat. I can help you slow down, think through what you need, or connect you with the team. I\'m not a therapist and this isn\'t emergency support, just a quiet companion.',
     face: 'happy',
   },
   {
     selector: '.quiet-tools:not(.journal-invite)',
     title: 'Quiet private practices',
-    body: 'These three tools work completely inside your browser — nothing is saved or sent. Try a 1-minute breathing exercise, a 5-4-3-2-1 grounding check-in, or a free-write brain dump to get thoughts out of your head.',
+    body: 'These tools work completely inside your browser. Nothing is saved or sent. Try a 1-minute breathing exercise, a 5-4-3-2-1 grounding check-in, or a free-write brain dump to get thoughts out of your head.',
     face: 'breathe',
   },
   {
     selector: '.journal-invite',
     title: 'Your private journal',
-    body: 'Your journal is a safe, private space to write freely. By default nothing is saved — you decide whether to keep an entry. You can also use voice typing if your browser supports it.',
+    body: 'Your journal is a safe, private space to write freely. By default nothing is saved. You decide whether to keep an entry. You can also use voice typing if your browser supports it.',
     face: 'cozy',
   },
   {
@@ -1299,8 +1386,8 @@ const TOUR_STEPS = [
   },
   {
     selector: '[data-open-urgent]',
-    title: 'Urgent support — always visible',
-    body: 'If you or someone else is in immediate danger, this button is always in the header. It opens a direct link to find verified crisis helplines near you by country. Please reach out — you don\'t have to be alone.',
+    title: 'Urgent support, always visible',
+    body: 'If you or someone else is in immediate danger, this button is always in the header. It opens a direct link to find verified crisis helplines near you by country. Please reach out. You don\'t have to be alone.',
     face: 'care',
   },
 ];

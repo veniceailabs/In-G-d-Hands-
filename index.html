@@ -115,6 +115,13 @@
             <span class="tool-copy">Write freely, then choose one thing that deserves your care.</span>
             <span class="tool-arrow" aria-hidden="true">→</span>
           </button>
+          <button class="tool-card tool-card-movement" type="button" data-practice="movement">
+            <span class="tool-art movement-art" aria-hidden="true">◎</span>
+            <span class="tool-time">2 minutes</span>
+            <span class="tool-title">Make one gentle shift</span>
+            <span class="tool-copy">A quiet body practice. Your body always decides what feels okay.</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
+          </button>
         </div>
       </section>
 
@@ -147,6 +154,7 @@
       <div class="dialog-orb" aria-hidden="true"></div>
       <p class="step-label">A small next step</p>
       <h2 id="support-title">Let’s make this moment a little lighter.</h2>
+      <p class="support-orient" id="support-orient" hidden></p>
       <p class="support-reflection" id="support-reflection"></p>
       <div class="support-options" id="support-options"></div>
       <button class="secondary-button" type="button" data-back>Choose another feeling</button>
@@ -204,9 +212,9 @@
       <p class="step-label">A moment to notice</p>
       <h2 id="completion-title">We can leave it there.</h2>
       <p class="completion-intro">There is nothing to get right. If you want to, notice how this moment feels now. By default, this stays only on this page.</p>
-      <p class="field-note completion-feedback-note" id="completion-feedback-note" hidden>Anonymous feedback is on. When you close this moment, we may save only this practice category and one response below - never your writing, chat, private-space ID, or contact details. You can turn it off in Privacy.</p>
+      <p class="field-note completion-feedback-note" id="completion-feedback-note" hidden>Anonymous feedback is on. When you close this moment, we may save only this practice category and one response below. Never your writing, chat, private-space ID, or contact details. You can turn it off in Privacy.</p>
       <section class="completion-check" aria-labelledby="completion-check-title">
-        <h3 id="completion-check-title">Right now, it feels…</h3>
+        <h3 id="completion-check-title">Right now, it feels</h3>
         <div class="completion-choices" role="group" aria-label="Optional reflection on this practice">
           <button type="button" data-completion-feeling="a little different" aria-pressed="false">A little different</button>
           <button type="button" data-completion-feeling="about the same" aria-pressed="false">About the same</button>
@@ -216,6 +224,7 @@
       </section>
       <div class="dialog-actions completion-actions">
         <button class="secondary-button" type="button" data-completion-more>See another gentle option</button>
+        <button class="secondary-button completion-reminder-btn" type="button" id="completion-reminder-btn">Set a gentle reminder</button>
         <button class="primary-button" type="button" data-close-dialog>Close for now</button>
       </div>
     </dialog>
@@ -243,10 +252,21 @@
       </div>
       <label class="toggle-row"><span><span class="settings-label">Higher contrast</span><span class="settings-help">Make boundaries and text more distinct.</span></span><input type="checkbox" data-setting="contrast" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
       <label class="toggle-row"><span><span class="settings-label">Reduce motion</span><span class="settings-help">Minimize movement and animation.</span></span><input type="checkbox" data-setting="motion" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
-      <label class="toggle-row"><span><span class="settings-label">Calm background sound (432 Hz)</span><span class="settings-help">A soft, meditative 432 Hz handpan and warm ambient soundscape synthesized gently on-device.</span></span><input type="checkbox" id="calm-sound-toggle" data-setting="calmSound" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
-      <div class="settings-row">
-        <div><span class="settings-label">Sound volume</span><span class="settings-help">How loud the 432 Hz handpan and ambient sound plays.</span></div>
-        <input type="range" id="calm-sound-volume" min="0" max="100" value="22" aria-label="Calm background sound volume" />
+      <div class="settings-group">
+        <span class="settings-label">Background sound</span>
+        <span class="settings-help">Synthesized on-device. Nothing is streamed or downloaded.</span>
+        <div class="sound-type-grid" role="group" aria-label="Background sound type">
+          <button type="button" class="sound-type-btn" data-sound-type="handpan" aria-pressed="true">432 Hz Handpan</button>
+          <button type="button" class="sound-type-btn" data-sound-type="rain" aria-pressed="false">Rain</button>
+          <button type="button" class="sound-type-btn" data-sound-type="ocean" aria-pressed="false">Ocean</button>
+          <button type="button" class="sound-type-btn" data-sound-type="wind" aria-pressed="false">Wind</button>
+          <button type="button" class="sound-type-btn" data-sound-type="whitenoise" aria-pressed="false">White noise</button>
+        </div>
+        <label class="toggle-row" style="margin-top:1rem"><span><span class="settings-label">Play background sound</span><span class="settings-help">Toggle sound on or off.</span></span><input type="checkbox" id="calm-sound-toggle" data-setting="calmSound" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
+        <div class="settings-row">
+          <div><span class="settings-label">Volume</span><span class="settings-help">How loud the background sound plays.</span></div>
+          <input type="range" id="calm-sound-volume" min="0" max="100" value="22" aria-label="Background sound volume" />
+        </div>
       </div>
       <div class="tour-launch-row">
         <div><span class="settings-label">Site tour</span><span class="settings-help">Let Honey walk you through every section of the app.</span></div>
@@ -293,7 +313,10 @@
         <button class="secondary-button" type="button" data-cancel-private-space>Not now</button>
       </section>
       <label class="consent-row delete-space-confirm" hidden><input type="checkbox" data-confirm-delete-space /> <span>I understand that deleting this private space removes its anonymous account and cannot be undone.</span></label>
-      <button class="secondary-button delete-space-button" type="button" data-delete-private-space hidden>Delete my private space</button>
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" data-export-private-space hidden>Export my data</button>
+        <button class="secondary-button delete-space-button" style="color:var(--coral)" type="button" data-delete-private-space hidden>Delete space</button>
+      </div>
       <p class="form-status" id="private-space-status" role="status" aria-live="polite"></p>
     </dialog>
 
