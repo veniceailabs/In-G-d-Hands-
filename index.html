@@ -248,6 +248,10 @@
         <div><span class="settings-label">Sound volume</span><span class="settings-help">How loud the 432 Hz handpan and ambient sound plays.</span></div>
         <input type="range" id="calm-sound-volume" min="0" max="100" value="22" aria-label="Calm background sound volume" />
       </div>
+      <div class="tour-launch-row">
+        <div><span class="settings-label">Site tour</span><span class="settings-help">Let Honey walk you through every section of the app.</span></div>
+        <button class="secondary-button" type="button" id="tour-launch-button">Start tour</button>
+      </div>
     </dialog>
 
     <dialog class="privacy-dialog" id="privacy-dialog" aria-labelledby="privacy-title">
@@ -417,6 +421,41 @@
       </form>
       <button class="team-link" type="button" data-open-team>Rather speak with the team? Request a check-in <span aria-hidden="true">→</span></button>
     </section>
+
+    <!-- Honey-guided tour: invite strip (first visit only) -->
+    <div class="tour-invite" id="tour-invite" hidden role="region" aria-label="Site tour invitation">
+      <div class="tour-invite-inner">
+        <span class="tour-invite-bear" aria-hidden="true"><span class="bear-mark"><span class="bear-ears"><i></i><i></i></span><span class="bear-face"><i></i></span></span></span>
+        <p class="tour-invite-text"><strong>Hi, I'm Honey.</strong> Would you like me to show you around? It only takes a minute.</p>
+        <div class="tour-invite-actions">
+          <button class="primary-button" type="button" id="tour-invite-start">Show me around</button>
+          <button class="text-button" type="button" id="tour-invite-skip">Not now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tour spotlight overlay -->
+    <div class="tour-overlay" id="tour-overlay" hidden aria-hidden="true"></div>
+
+    <!-- Tour tooltip card narrated by Honey -->
+    <div class="tour-tooltip" id="tour-tooltip" hidden role="dialog" aria-labelledby="tour-tooltip-title" aria-describedby="tour-tooltip-body">
+      <div class="tour-tooltip-header">
+        <span class="tour-tooltip-bear" aria-hidden="true"><span class="bear-mark"><span class="bear-ears"><i></i><i></i></span><span class="bear-face"><i></i></span></span></span>
+        <div>
+          <p class="step-label tour-step-label" id="tour-step-counter" aria-live="polite"></p>
+          <h2 class="tour-tooltip-title" id="tour-tooltip-title"></h2>
+        </div>
+      </div>
+      <p class="tour-tooltip-body" id="tour-tooltip-body"></p>
+      <div class="tour-tooltip-actions">
+        <button class="text-button" type="button" id="tour-prev" aria-label="Previous step">← Back</button>
+        <button class="primary-button" type="button" id="tour-next" aria-label="Next step">Next →</button>
+        <button class="text-button tour-end-button" type="button" id="tour-end" aria-label="End tour">End tour</button>
+      </div>
+    </div>
+
+    <!-- Screen reader live region for tour narration -->
+    <div id="tour-live" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
     <script src="app.js"></script>
   </body>
