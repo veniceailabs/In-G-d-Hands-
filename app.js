@@ -200,7 +200,7 @@ function applyPreferences() {
   root.dataset.reducedMotion = String(preferences.motion);
   const themeColor = preferences.contrast ? (resolvedTheme === 'dark' ? '#000000' : '#ffffff') : (resolvedTheme === 'dark' ? '#13242d' : '#f5f1ea');
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
-  document.querySelectorAll('[data-theme]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === preferences.theme)));
+  document.querySelectorAll('button[data-theme]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === preferences.theme)));
   function setChecked(selector, val) { const el = document.querySelector(selector); if (el && el.checked !== val) el.checked = val; }
   setChecked('[data-setting="contrast"]', preferences.contrast);
   setChecked('[data-setting="motion"]', preferences.motion);
@@ -602,7 +602,7 @@ document.querySelector('[data-open-privacy]').addEventListener('click', () => { 
 document.querySelector('[data-open-resources]').addEventListener('click', () => resourcesDialog.showModal());
 document.querySelector('[data-open-connection-draft]').addEventListener('click', () => { resourcesDialog.close(); openPractice('connection'); });
 document.querySelector('[data-open-team-from-resources]').addEventListener('click', () => { resourcesDialog.close(); openTeamSupport(); });
-document.querySelectorAll('[data-theme]').forEach((button) => button.addEventListener('click', () => { preferences.theme = button.dataset.theme; savePreferences(preferences); applyPreferences(); }));
+document.querySelectorAll('button[data-theme]').forEach((button) => button.addEventListener('click', () => { preferences.theme = button.dataset.theme; savePreferences(preferences); applyPreferences(); }));
 document.querySelectorAll('[data-text-size]').forEach((button) => button.addEventListener('click', () => {
   const scales = ['default', 'large', 'larger']; let index = scales.indexOf(preferences.textScale);
   index = Math.max(0, Math.min(scales.length - 1, index + (button.dataset.textSize === 'increase' ? 1 : -1)));
