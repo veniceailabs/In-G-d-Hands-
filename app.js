@@ -1055,7 +1055,13 @@ calmSoundToggle.addEventListener('change', () => {
 calmSoundVolumeSlider.addEventListener('input', () => {
   preferences.calmVolume = Number(calmSoundVolumeSlider.value);
   savePreferences(preferences);
-  applyPreferences();
+  if (calmMasterGain && calmAudioContext) {
+    try {
+      const target = preferences.calmSound ? (preferences.calmVolume / 100) * 0.45 : 0;
+      calmMasterGain.gain.setValueAtTime(calmMasterGain.gain.value, calmAudioContext.currentTime);
+      calmMasterGain.gain.linearRampToValueAtTime(target, calmAudioContext.currentTime + 0.1);
+    } catch {}
+  }
 });
 
 function tryStartAudioOnUserGesture(event) {
