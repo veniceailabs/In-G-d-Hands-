@@ -241,9 +241,9 @@
           <button type="button" data-text-size="increase" aria-label="Increase text size">A+</button>
         </div>
       </div>
-      <label class="toggle-row"><span><span class="settings-label">Higher contrast</span><span class="settings-help">Make boundaries and text more distinct.</span></span><input type="checkbox" data-setting="contrast" /></label>
-      <label class="toggle-row"><span><span class="settings-label">Reduce motion</span><span class="settings-help">Minimize movement and animation.</span></span><input type="checkbox" data-setting="motion" /></label>
-      <label class="toggle-row"><span><span class="settings-label">Calm background sound (432 Hz)</span><span class="settings-help">A soft, meditative 432 Hz handpan and warm ambient soundscape synthesized gently on-device.</span></span><input type="checkbox" id="calm-sound-toggle" data-setting="calmSound" /></label>
+      <label class="toggle-row"><span><span class="settings-label">Higher contrast</span><span class="settings-help">Make boundaries and text more distinct.</span></span><input type="checkbox" data-setting="contrast" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
+      <label class="toggle-row"><span><span class="settings-label">Reduce motion</span><span class="settings-help">Minimize movement and animation.</span></span><input type="checkbox" data-setting="motion" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
+      <label class="toggle-row"><span><span class="settings-label">Calm background sound (432 Hz)</span><span class="settings-help">A soft, meditative 432 Hz handpan and warm ambient soundscape synthesized gently on-device.</span></span><input type="checkbox" id="calm-sound-toggle" data-setting="calmSound" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
       <div class="settings-row">
         <div><span class="settings-label">Sound volume</span><span class="settings-help">How loud the 432 Hz handpan and ambient sound plays.</span></div>
         <input type="range" id="calm-sound-volume" min="0" max="100" value="22" aria-label="Calm background sound volume" />
@@ -281,7 +281,7 @@
         <summary>What technical information is involved?</summary>
         <p>Like nearly every website, our hosting, security, and database services may process limited technical information such as an IP address and browser data to run the service and prevent abuse. We do not use this to build a wellness profile or sell your information.</p>
       </details>
-      <label class="toggle-row"><span><span class="settings-label">Help us improve, anonymously</span><span class="settings-help">Off by default. When on, a practice completion can share only its category and your optional three-choice response. You can turn this off anytime.</span></span><input type="checkbox" data-setting="anonymous-feedback" /></label>
+      <label class="toggle-row"><span><span class="settings-label">Help us improve, anonymously</span><span class="settings-help">Off by default. When on, a practice completion can share only its category and your optional three-choice response. You can turn this off anytime.</span></span><input type="checkbox" data-setting="anonymous-feedback" class="sr-only" /><div class="toggle-slider" aria-hidden="true"></div></label>
       <div class="private-space-action">
         <div><h3>Create an optional private space</h3><p>Today, it simply gives you a private, no-personal-info identity for features you explicitly choose to save in the future. All current practices remain unsaved by default.</p></div>
         <button class="primary-button" type="button" data-create-private-space>Create private space <span aria-hidden="true">→</span></button>
