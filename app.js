@@ -201,13 +201,15 @@ function applyPreferences() {
   const themeColor = preferences.contrast ? (resolvedTheme === 'dark' ? '#000000' : '#ffffff') : (resolvedTheme === 'dark' ? '#13242d' : '#f5f1ea');
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   document.querySelectorAll('[data-theme]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === preferences.theme)));
-  document.querySelector('[data-setting="contrast"]').checked = preferences.contrast;
-  document.querySelector('[data-setting="motion"]').checked = preferences.motion;
-  anonymousFeedbackSetting.checked = preferences.anonymousFeedback;
+  function setChecked(selector, val) { const el = document.querySelector(selector); if (el && el.checked !== val) el.checked = val; }
+  setChecked('[data-setting="contrast"]', preferences.contrast);
+  setChecked('[data-setting="motion"]', preferences.motion);
+  setChecked('[data-setting="anonymous-feedback"]', preferences.anonymousFeedback);
+  if (calmSoundToggle && calmSoundToggle.checked !== preferences.calmSound) calmSoundToggle.checked = preferences.calmSound;
+  
   completionFeedbackNote.hidden = !preferences.anonymousFeedback;
   document.querySelector('#text-size-status').textContent = preferences.textScale === 'default' ? 'Default' : preferences.textScale === 'large' ? 'Large' : 'Largest';
-  calmSoundToggle.checked = preferences.calmSound;
-  calmSoundVolumeSlider.value = String(preferences.calmVolume);
+  if (calmSoundVolumeSlider.value !== String(preferences.calmVolume)) calmSoundVolumeSlider.value = String(preferences.calmVolume);
   document.querySelectorAll('.sound-type-btn').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.soundType === preferences.soundType)));
   calmSoundButton.setAttribute('aria-pressed', String(preferences.calmSound));
   calmSoundButton.setAttribute('aria-label', preferences.calmSound ? 'Turn off calm background sound' : 'Turn on calm background sound');
